@@ -53,8 +53,9 @@ echo "📋 Копирование common/src..."
 cp -r "$DEV_DIR/common/src"/* common/src/ 2>/dev/null || echo "⚠️  Common src пустой"
 
 echo "📋 Копирование package.json файлов..."
+mkdir -p server
 cp "$DEV_DIR/common/package.json" common/ 2>/dev/null || echo "⚠️  common/package.json не найден"
-cp "$DEV_DIR/server/package.json" . 2>/dev/null || echo "⚠️  server/package.json не найден"
+cp "$DEV_DIR/server/package.json" server/ 2>/dev/null || echo "⚠️  server/package.json не найден"
 
 echo "📋 Копирование конфигурационных файлов..."
 cp "$DEV_DIR/server/config.production.json" server-dist/config.json 2>/dev/null || echo "⚠️  config.production.json не найден"
