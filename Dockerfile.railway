@@ -35,7 +35,8 @@ RUN mkdir -p ./client/dist ./server/dist ./common/src ./common && \
     (test -d client-dist && cp -r client-dist/* ./client/dist/ 2>/dev/null) || echo "Client files not found" && \
     (test -d server-dist && cp -r server-dist/* ./server/dist/ 2>/dev/null) || echo "Server files not found" && \
     (test -d common/src && cp -r common/src/* ./common/src/ 2>/dev/null) || echo "Common src not found" && \
-    (test -f common/package.json && cp common/package.json ./common/) || echo "Common package.json not found"
+    (test -f common/package.json && cp common/package.json ./common/) || echo "Common package.json not found" && \
+    (test -f server/package.json && cp server/package.json ./server/) || echo "Server package.json not found"
 
 # Create server config (use default if config.json not found)
 RUN mkdir -p ./server && \
@@ -120,4 +121,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Start server with Railway port using environment variable
 # Suroi server reads port from PORT environment variable or config
-CMD PORT=$PORT node server/dist/server/src/server.js
+WORKDIR /app/server
+CMD PORT=$PORT node dist/server/src/server.js
