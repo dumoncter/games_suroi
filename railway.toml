@@ -1,19 +1,24 @@
 [build]
 builder = "dockerfile"
+dockerfilePath = "Dockerfile.railway"
 
 [deploy]
-startCommand = "pnpm start"
-healthcheckPath = "/"
-healthcheckTimeout = 300
+healthcheckPath = "/api/serverInfo"
 restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 10
+healthcheckTimeout = 300
+startCommand = "node server/dist/server/src/server.js"
 
-[services.suroi]
-source = "."
+[environments]
+production = { }
 
-[services.suroi.env]
-NODE_ENV = "production"
-PORT = "3000"
+[[services]]
+id = "suroi-production"
+name = "Suroi Production"
+source = { repo = "https://github.com/dumoncter/games_suroi", path = "production-build" }
+healthcheckPath = "/api/serverInfo"
+domains = ["gamessuroi-production.up.railway.app"]
 
-[services.suroi.build]
-builder = "dockerfile"
+# WebSocket support - expose port for WebSocket connections
+[[tcpProxies]]
+applicationPort = 8000
+proxyPort = 8000

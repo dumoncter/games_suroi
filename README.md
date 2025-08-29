@@ -1,3 +1,87 @@
+# 🚀 Suroi Production Scripts
+
+## 📋 Основные скрипты
+
+### 1. Компиляция проекта
+```bash
+./build.sh
+```
+Компилирует весь проект из папки dev и копирует в prod.
+
+### 2. Деплой на Railway
+```bash
+./deploy.sh "Сообщение коммита"
+```
+Загружает production файлы на GitHub, Railway автоматически передеплойт.
+
+### 3. Тест WebSocket
+```bash
+./test.sh
+```
+Проверяет Railway сервер и диагностирует WebSocket проблемы.
+
+### 4. Быстрый передеплой (для исправления проблем)
+```bash
+./redeploy.sh
+```
+Передеплой с исправлениями WebSocket без полной пересборки.
+
+## 🎯 Production URLs
+- **Игра**: https://gamessuroi-production.up.railway.app
+- **Railway Dashboard**: https://railway.app/dashboard
+- **GitHub**: https://github.com/dumoncter/games_suroi/tree/production-build
+
+## 📝 Использование
+
+```bash
+# Первый запуск
+./build.sh
+./deploy.sh "Первый деплой"
+
+# После изменений в коде
+./build.sh
+./deploy.sh "Исправлена ошибка X"
+
+# Если WebSocket не работает - быстрый передеплой
+./redeploy.sh
+
+# Проверка работоспособности
+./test.sh
+```
+
+## 🔧 WebSocket исправления
+
+✅ **Dockerfile оптимизирован** для Railway с правильной переменной PORT
+✅ **Railway.toml настроен** с WebSocket поддержкой
+✅ **TCP прокси настроен** для порта 8000
+✅ **Environment переменные** правильно передаются серверу
+
+## 🚨 Если WebSocket все еще не работает
+
+1. **Быстрый передеплой**:
+   ```bash
+   ./redeploy.sh
+   ```
+
+2. **Проверьте логи Railway**: https://railway.app/dashboard
+
+3. **Подождите 5 минут** для полного передеплоя
+
+4. **Протестируйте**: `./test.sh`
+
+5. **Проверьте в браузере**: Откройте DevTools (F12) → Console
+
+## 📊 Статус исправлений
+
+| Проблема | Статус | Решение |
+|----------|--------|---------|
+| HTTP API | ✅ Работает | JSON ответ получен |
+| WebSocket порт | 🔧 Исправлено | TCP прокси на 8000 |
+| Dockerfile | ✅ Оптимизирован | Использует PORT переменную |
+| Railway.toml | ✅ Настроен | WebSocket поддержка |
+
+---
+
 <div align="center">
   <img src="client/public/img/backgrounds/github_background.png" alt="Suroi">
   <hr>
