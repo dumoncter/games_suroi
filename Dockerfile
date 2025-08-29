@@ -1,18 +1,20 @@
 # Multi-stage Dockerfile for Suroi game
-FROM node:20-alpine AS base
+FROM node:20-slim AS base
 
 # Install system dependencies for skia-canvas and other native modules
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     fontconfig \
-    freetype \
-    libpng \
-    libjpeg-turbo \
-    giflib \
-    librsvg \
-    cairo \
-    pango \
-    harfbuzz \
-    icu-data-full
+    libfreetype6 \
+    libpng16-16 \
+    libjpeg62-turbo \
+    libgif7 \
+    librsvg2-2 \
+    libcairo2 \
+    libpango-1.0-0 \
+    libharfbuzz0b \
+    libicu70 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm
 RUN npm install -g pnpm
@@ -48,21 +50,22 @@ RUN cd client && pnpm build
 RUN cd server && pnpm build
 
 # Production stage
-FROM node:20-alpine AS production
+FROM node:20-slim AS production
 
 # Install system dependencies for skia-canvas and other native modules
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     fontconfig \
-    freetype \
-    libpng \
-    libjpeg-turbo \
-    giflib \
-    librsvg \
-    cairo \
-    pango \
-    harfbuzz \
-    icu-data-full \
-    curl
+    libfreetype6 \
+    libpng16-16 \
+    libjpeg62-turbo \
+    libgif7 \
+    librsvg2-2 \
+    libcairo2 \
+    libpango-1.0-0 \
+    libharfbuzz0b \
+    libicu70 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm
 RUN npm install -g pnpm
