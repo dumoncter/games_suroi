@@ -39,59 +39,61 @@ RUN mkdir -p ./client/dist ./server/dist ./common/src ./common && \
 
 # Create server config (use default if config.json not found)
 RUN mkdir -p ./server && \
-    (test -f server-dist/config.json && cp server-dist/config.json ./server/config.json) || \
-    cat > ./server/config.json << 'EOF'
-{
-  "host": "0.0.0.0",
-  "port": 8000,
-  "maxPlayersPerGame": 80,
-  "maxGames": 100,
-  "rateLimit": {
-    "windowMs": 1000,
-    "maxRequests": 10
-  },
-  "gas": {
-    "mode": "normal"
-  },
-  "map": {
-    "width": 1344,
-    "height": 1344
-  }
-}
-EOF
+    if test -f server-dist/config.json; then \
+        cp server-dist/config.json ./server/config.json; \
+    else \
+        printf '{\n\
+  "host": "0.0.0.0",\n\
+  "port": 8000,\n\
+  "maxPlayersPerGame": 80,\n\
+  "maxGames": 100,\n\
+  "rateLimit": {\n\
+    "windowMs": 1000,\n\
+    "maxRequests": 10\n\
+  },\n\
+  "gas": {\n\
+    "mode": "normal"\n\
+  },\n\
+  "map": {\n\
+    "width": 1344,\n\
+    "height": 1344\n\
+  }\n\
+}' > ./server/config.json; \
+    fi
 
 # Copy scripts (if exists)
 RUN mkdir -p ./scripts && \
     (test -d scripts && cp -r scripts/* ./scripts/ 2>/dev/null) || echo "Scripts not found, skipping"
 
 # Copy nginx config (if exists)
-RUN test -f nginx.conf && cp nginx.conf /etc/nginx/nginx.conf || \
-    cat > /etc/nginx/nginx.conf << 'EOF'
-events {
-    worker_connections 1024;
-}
-http {
-    include /etc/nginx/mime.types;
-    default_type application/octet-stream;
-
-    server {
-        listen 80;
-        server_name localhost;
-        root /app/client/dist;
-        index index.html;
-
-        location / {
-            try_files $uri $uri/ /index.html;
-        }
-
-        location /api/ {
-            proxy_pass http://localhost:8000/;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-        }
-    }
-}
-EOF
+RUN if test -f nginx.conf; then \
+        cp nginx.conf /etc/nginx/nginx.conf; \
+    else \
+        printf 'events {\n\
+    worker_connections 1024;\n\
+}\n\
+http {\n\
+    include /etc/nginx/mime.types;\n\
+    default_type application/octet-stream;\n\
+\n\
+    server {\n\
+        listen 80;\n\
+        server_name localhost;\n\
+        root /app/client/dist;\n\
+        index index.html;\n\
+\n\
+        location / {\n\
+            try_files \$uri \$uri/ /index.html;\n\
+        }\n\
+\n\
+        location /api/ {\n\
+            proxy_pass http://localhost:8000/;\n\
+            proxy_set_header Host \$host;\n\
+            proxy_set_header X-Real-IP \$remote_addr;\n\
+        }\n\
+    }\n\
+}' > /etc/nginx/nginx.conf; \
+    fi
 
 # Create non-root user
 RUN groupadd -g 1001 nodejs && \
