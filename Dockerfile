@@ -1,6 +1,19 @@
 # Multi-stage Dockerfile for Suroi game
 FROM node:20-alpine AS base
 
+# Install system dependencies for skia-canvas and other native modules
+RUN apk add --no-cache \
+    fontconfig \
+    freetype \
+    libpng \
+    libjpeg-turbo \
+    giflib \
+    librsvg \
+    cairo \
+    pango \
+    harfbuzz \
+    icu-data-full
+
 # Install pnpm
 RUN npm install -g pnpm
 
@@ -37,6 +50,20 @@ RUN cd server && pnpm build
 # Production stage
 FROM node:20-alpine AS production
 
+# Install system dependencies for skia-canvas and other native modules
+RUN apk add --no-cache \
+    fontconfig \
+    freetype \
+    libpng \
+    libjpeg-turbo \
+    giflib \
+    librsvg \
+    cairo \
+    pango \
+    harfbuzz \
+    icu-data-full \
+    curl
+
 # Install pnpm
 RUN npm install -g pnpm
 
@@ -63,7 +90,7 @@ COPY common/src ./common/src
 COPY common/package.json ./common/
 
 # Copy server config
-COPY server/config.example.json ./server/config.json
+COPY server/config.production.json ./server/config.json
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs
