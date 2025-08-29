@@ -56,6 +56,7 @@ Railway автоматически:
 - **Клиент** (порт 3000): Static files served by Nginx
 - **Сервер** (порт 8000): Node.js с uWebSockets.js
 - **API/WebSocket проксирование** настроено через Nginx
+- **Production сервер** настроен по умолчанию для клиента
 - **SPA fallback** для клиентского роутинга
 
 ### Конфигурация
