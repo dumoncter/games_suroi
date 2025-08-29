@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for Suroi game
-FROM node:20-bullseye-slim AS base
+FROM node:20-bookworm-slim AS base
 
 # Install system dependencies for skia-canvas and other native modules
 RUN apt-get update && apt-get install -y \
@@ -50,7 +50,7 @@ RUN cd client && pnpm build
 RUN cd server && pnpm build
 
 # Production stage
-FROM node:20-bullseye-slim AS production
+FROM node:20-bookworm-slim AS production
 
 # Install system dependencies for skia-canvas and other native modules
 RUN apt-get update && apt-get install -y \
