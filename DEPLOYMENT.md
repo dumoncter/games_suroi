@@ -92,6 +92,7 @@ Railway предоставляет:
 - **Проблемы с skia-canvas**: Убедитесь что Debian пакеты установлены (fontconfig, cairo, pango)
 - **uWebSockets.js ошибки**: Используется Debian 12 (Bookworm) с GLIBC 2.36+
 - **GLIBC version errors**: Образ node:20-bookworm-slim имеет совместимую версию GLIBC
+- **pnpm frozen-lockfile errors**: Dockerfile имеет fallback на --no-frozen-lockfile
 
 ### Проблемы с запуском
 - Проверьте логи в Railway dashboard
