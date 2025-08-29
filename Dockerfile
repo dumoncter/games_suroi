@@ -1,17 +1,17 @@
 # Multi-stage Dockerfile for Suroi game
-FROM node:20-slim AS base
+FROM node:20-bullseye-slim AS base
 
 # Install system dependencies for skia-canvas and other native modules
 RUN apt-get update && apt-get install -y \
     fontconfig \
     libfreetype6 \
     libpng-dev \
-    libjpeg62 \
-    libgif7 \
-    librsvg2-2 \
-    libcairo2 \
-    libpango-1.0-0 \
-    libharfbuzz0b \
+    libjpeg-dev \
+
+
+
+
+
     libicu-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -50,19 +50,19 @@ RUN cd client && pnpm build
 RUN cd server && pnpm build
 
 # Production stage
-FROM node:20-slim AS production
+FROM node:20-bullseye-slim AS production
 
 # Install system dependencies for skia-canvas and other native modules
 RUN apt-get update && apt-get install -y \
     fontconfig \
     libfreetype6 \
     libpng-dev \
-    libjpeg62 \
-    libgif7 \
-    librsvg2-2 \
-    libcairo2 \
-    libpango-1.0-0 \
-    libharfbuzz0b \
+    libjpeg-dev \
+
+
+
+
+
     libicu-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
