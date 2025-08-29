@@ -93,6 +93,7 @@ Railway предоставляет:
 - **uWebSockets.js ошибки**: Используется Debian 12 (Bookworm) с GLIBC 2.36+
 - **GLIBC version errors**: Образ node:20-bookworm-slim имеет совместимую версию GLIBC
 - **pnpm frozen-lockfile errors**: Dockerfile имеет fallback на --no-frozen-lockfile
+- **nginx directory errors**: Dockerfile автоматически создает все необходимые директории
 
 ### Проблемы с запуском
 - Проверьте логи в Railway dashboard
