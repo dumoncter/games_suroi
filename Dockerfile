@@ -5,14 +5,14 @@ FROM node:20-slim AS base
 RUN apt-get update && apt-get install -y \
     fontconfig \
     libfreetype6 \
-    libpng16-16t64 \
+    libpng-dev \
     libjpeg62 \
     libgif7 \
     librsvg2-2 \
     libcairo2 \
     libpango-1.0-0 \
     libharfbuzz0b \
-    libicu74 \
+    libicu-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -56,14 +56,14 @@ FROM node:20-slim AS production
 RUN apt-get update && apt-get install -y \
     fontconfig \
     libfreetype6 \
-    libpng16-16t64 \
+    libpng-dev \
     libjpeg62 \
     libgif7 \
     librsvg2-2 \
     libcairo2 \
     libpango-1.0-0 \
     libharfbuzz0b \
-    libicu74 \
+    libicu-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
