@@ -92,6 +92,9 @@ COPY common/package.json ./common/
 # Copy server config
 COPY server/config.production.json ./server/config.json
 
+# Copy production scripts
+COPY scripts/ ./scripts/
+
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
