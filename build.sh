@@ -39,10 +39,24 @@ echo "✅ Компиляция завершена!"
 echo "📋 Копирование в prod..."
 cd "$PROD_DIR"
 
-# Копируем файлы
-cp -r "$DEV_DIR/client/dist"/* client-dist/ 2>/dev/null || mkdir -p client-dist && cp -r "$DEV_DIR/client/dist"/* client-dist/
-cp -r "$DEV_DIR/server/dist"/* server-dist/ 2>/dev/null || mkdir -p server-dist && cp -r "$DEV_DIR/server/dist"/* server-dist/
-cp -r "$DEV_DIR/common/src" common/ 2>/dev/null || mkdir -p common && cp -r "$DEV_DIR/common/src"/* common/
+# Копируем файлы с правильной структурой для Docker
+echo "📋 Создание правильной структуры директорий..."
+mkdir -p client-dist server-dist common/src
+
+echo "📋 Копирование client-dist..."
+cp -r "$DEV_DIR/client/dist"/* client-dist/ 2>/dev/null || echo "⚠️  Client dist пустой"
+
+echo "📋 Копирование server-dist..."
+cp -r "$DEV_DIR/server/dist"/* server-dist/ 2>/dev/null || echo "⚠️  Server dist пустой"
+
+echo "📋 Копирование common/src..."
+cp -r "$DEV_DIR/common/src"/* common/src/ 2>/dev/null || echo "⚠️  Common src пустой"
+
+echo "📋 Копирование package.json файлов..."
+cp "$DEV_DIR/common/package.json" common/ 2>/dev/null || echo "⚠️  common/package.json не найден"
+cp "$DEV_DIR/server/package.json" . 2>/dev/null || echo "⚠️  server/package.json не найден"
+
+echo "📋 Копирование конфигурационных файлов..."
 cp "$DEV_DIR/server/config.production.json" server-dist/config.json 2>/dev/null || echo "⚠️  config.production.json не найден"
 
 # Копируем конфигурационные файлы
