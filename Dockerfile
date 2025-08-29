@@ -79,6 +79,9 @@ COPY client/package.json ./client/
 COPY server/package.json ./server/
 COPY common/package.json ./common/
 
+# Copy built client
+COPY --from=build /app/client/dist ./client/dist
+
 # Install production dependencies only
 RUN pnpm install --frozen-lockfile --prod
 
