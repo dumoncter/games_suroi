@@ -41,6 +41,7 @@ Railway автоматически:
 - **Node.js 20 Alpine** как базовый образ
 - **pnpm** для управления зависимостями
 - **Production оптимизации** (минификация, сжатие)
+- **Системные зависимости** для skia-canvas (fontconfig, cairo, pango, etc.)
 
 ### Сервисы
 - **Клиент** (порт 3000): React/Vite приложение
@@ -76,11 +77,25 @@ Railway предоставляет:
 
 ## Troubleshooting
 
+### Проблемы со сборкой
+- **Ошибка libfontconfig.so.1**: Dockerfile уже содержит все необходимые системные зависимости
+- **Проблемы с skia-canvas**: Убедитесь что Alpine Linux пакеты установлены (fontconfig, cairo, pango)
+
 ### Проблемы с запуском
 - Проверьте логи в Railway dashboard
 - Убедитесь что все переменные окружения установлены
 - Проверьте что порты 3000 и 8000 не конфликтуют
+- Убедитесь что CONFIG_FILE указывает на config.production.json
 
 ### Проблемы с производительностью
 - Проверьте использование памяти и CPU
 - Рассмотрите upgrade плана Railway для больших нагрузок
+- Мониторьте WebSocket соединения для игр в реальном времени
+
+### Переменные окружения
+```
+NODE_ENV=production
+PORT=3000
+API_URL=https://your-app-name.up.railway.app/api
+CONFIG_FILE=config.production.json
+```
