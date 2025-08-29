@@ -53,6 +53,9 @@ importers:
       pixi.js:
         specifier: ^8.12.0
         version: 8.12.0
+      sirv-cli:
+        specifier: ^3.0.1
+        version: 3.0.1
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^5.1.1
@@ -102,9 +105,6 @@ importers:
       sass:
         specifier: ^1.90.0
         version: 1.90.0
-      sirv-cli:
-        specifier: ^3.0.1
-        version: 3.0.1
       skia-canvas:
         specifier: ^2.0.2
         version: 2.0.2
