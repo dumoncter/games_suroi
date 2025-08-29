@@ -32,11 +32,17 @@ RUN pnpm install --frozen-lockfile --prod || pnpm install --no-frozen-lockfile -
 
 # Copy built files (with fallbacks)
 RUN mkdir -p ./client/dist ./server/dist ./common/src ./common && \
-    (test -d client-dist && cp -r client-dist/* ./client/dist/ 2>/dev/null) || echo "Client files not found" && \
-    (test -d server-dist && cp -r server-dist/* ./server/dist/ 2>/dev/null) || echo "Server files not found" && \
-    (test -d common/src && cp -r common/src/* ./common/src/ 2>/dev/null) || echo "Common src not found" && \
-    (test -f common/package.json && cp common/package.json ./common/) || echo "Common package.json not found" && \
-    (test -f server/package.json && cp server/package.json ./server/) || echo "Server package.json not found"
+    echo "=== COPYING CLIENT ===" && \
+    (test -d client-dist && cp -rv client-dist/* ./client/dist/ 2>/dev/null) || echo "Client files not found" && \
+    echo "=== COPYING SERVER ===" && \
+    (test -d server-dist && cp -rv server-dist/* ./server/dist/ 2>/dev/null) || echo "Server files not found" && \
+    echo "=== COPYING COMMON ===" && \
+    (test -d common/src && cp -rv common/src/* ./common/src/ 2>/dev/null) || echo "Common src not found" && \
+    (test -f common/package.json && cp -v common/package.json ./common/) || echo "Common package.json not found" && \
+    (test -f server/package.json && cp -v server/package.json ./server/) || echo "Server package.json not found" && \
+    echo "=== FILE STRUCTURE AFTER COPY ===" && \
+    find /app -name "server.js" -type f 2>/dev/null && \
+    ls -la /app/server/dist/server/src/ 2>/dev/null
 
 # Create server config (use default if config.json not found)
 RUN mkdir -p ./server && \
