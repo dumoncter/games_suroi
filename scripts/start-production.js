@@ -21,34 +21,33 @@ serverProcess.on('error', (error) => {
     process.exit(1);
 });
 
-// Wait a bit for server to start, then start client
+// Wait a bit for server to start, then start nginx
 setTimeout(() => {
-    const clientProcess = spawn('pnpm', ['start:client'], {
-        cwd: path.join(__dirname, '..'),
+    console.log('🚀 Starting Nginx...');
+    const nginxProcess = spawn('nginx', ['-g', 'daemon off;'], {
         stdio: 'inherit',
         env: {
-            ...process.env,
-            PORT: process.env.PORT || '3000'
+            ...process.env
         }
     });
 
-    clientProcess.on('error', (error) => {
-        console.error('Failed to start client:', error);
+    nginxProcess.on('error', (error) => {
+        console.error('Failed to start nginx:', error);
         process.exit(1);
     });
 
     // Handle process termination
     process.on('SIGINT', () => {
         console.log('Shutting down...');
+        nginxProcess.kill('SIGINT');
         serverProcess.kill('SIGINT');
-        clientProcess.kill('SIGINT');
         process.exit(0);
     });
 
     process.on('SIGTERM', () => {
         console.log('Shutting down...');
+        nginxProcess.kill('SIGTERM');
         serverProcess.kill('SIGTERM');
-        clientProcess.kill('SIGTERM');
         process.exit(0);
     });
 

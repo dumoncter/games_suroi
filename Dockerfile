@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
 
     libicu-dev \
     curl \
+    nginx \
     && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm
@@ -65,6 +66,7 @@ RUN apt-get update && apt-get install -y \
 
     libicu-dev \
     curl \
+    nginx \
     && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm
@@ -78,9 +80,6 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY client/package.json ./client/
 COPY server/package.json ./server/
 COPY common/package.json ./common/
-
-# Copy built client
-COPY --from=build /app/client/dist ./client/dist
 
 # Install production dependencies only
 RUN pnpm install --frozen-lockfile --prod
@@ -101,12 +100,19 @@ COPY server/config.production.json ./server/config.json
 # Copy production scripts
 COPY scripts/ ./scripts/
 
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
 # Create non-root user
 RUN groupadd -g 1001 nodejs
 RUN useradd -u 1001 -g nodejs -s /bin/bash -m nodejs
 
-# Change ownership
-RUN chown -R nodejs:nodejs /app
+# Change ownership and nginx permissions
+RUN chown -R nodejs:nodejs /app && \
+    chown -R nodejs:nodejs /var/log/nginx && \
+    chown -R nodejs:nodejs /var/cache/nginx && \
+    touch /run/nginx.pid && \
+    chown nodejs:nodejs /run/nginx.pid
 USER 1001
 
 # Expose ports
