@@ -38,7 +38,7 @@ Railway автоматически:
 
 ### Docker образ
 - **Multi-stage build** для оптимизации размера
-- **Node.js 20 Alpine** как базовый образ
+- **Node.js 20 Slim (Ubuntu)** как базовый образ (совместимость с uWebSockets.js)
 - **pnpm** для управления зависимостями
 - **Production оптимизации** (минификация, сжатие)
 - **Системные зависимости** для skia-canvas (fontconfig, cairo, pango, etc.)
@@ -79,7 +79,8 @@ Railway предоставляет:
 
 ### Проблемы со сборкой
 - **Ошибка libfontconfig.so.1**: Dockerfile уже содержит все необходимые системные зависимости
-- **Проблемы с skia-canvas**: Убедитесь что Alpine Linux пакеты установлены (fontconfig, cairo, pango)
+- **Проблемы с skia-canvas**: Убедитесь что Ubuntu пакеты установлены (fontconfig, cairo, pango)
+- **uWebSockets.js ошибки**: Используется Ubuntu образ для совместимости с glibc
 
 ### Проблемы с запуском
 - Проверьте логи в Railway dashboard
