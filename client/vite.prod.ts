@@ -4,7 +4,7 @@ import common from "./vite.common";
 
 const config: UserConfig = {
     define: {
-        API_URL: JSON.stringify(process.env.API_URL || "https://suroi-production.up.railway.app/api"),
+        API_URL: JSON.stringify(process.env.API_URL || "https://gamessuroi-production.up.railway.app/api"),
         DEBUG_CLIENT: false
     },
     build: {
