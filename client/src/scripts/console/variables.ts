@@ -326,7 +326,7 @@ export const defaultClientCVars: SimpleCVarMapping = Object.freeze({
 
     cv_autopickup: true,
     cv_autopickup_dual_guns: true,
-    cv_language: "en",
+    cv_language: "ru",
 
     // unused for now
     cv_mute_audio: false,
