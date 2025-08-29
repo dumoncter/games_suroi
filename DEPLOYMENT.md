@@ -55,7 +55,8 @@ Railway автоматически:
 ### Сервисы
 - **Клиент** (порт 3000): Static files served by Nginx
 - **Сервер** (порт 8000): Node.js с uWebSockets.js
-- **API проксирование** настроено через Nginx
+- **API/WebSocket проксирование** настроено через Nginx
+- **SPA fallback** для клиентского роутинга
 
 ### Конфигурация
 - `Dockerfile` - инструкции сборки контейнера
@@ -95,6 +96,7 @@ Railway предоставляет:
 - **pnpm frozen-lockfile errors**: Dockerfile имеет fallback на --no-frozen-lockfile
 - **nginx directory errors**: Dockerfile автоматически создает все необходимые директории
 - **nginx permission denied**: Dockerfile настраивает права для всех nginx директорий
+- **WebSocket connection errors**: Nginx properly proxies WebSocket upgrade headers
 
 ### Проблемы с запуском
 - Проверьте логи в Railway dashboard
