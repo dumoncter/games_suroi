@@ -94,6 +94,7 @@ Railway предоставляет:
 - **GLIBC version errors**: Образ node:20-bookworm-slim имеет совместимую версию GLIBC
 - **pnpm frozen-lockfile errors**: Dockerfile имеет fallback на --no-frozen-lockfile
 - **nginx directory errors**: Dockerfile автоматически создает все необходимые директории
+- **nginx permission denied**: Dockerfile настраивает права для всех nginx директорий
 
 ### Проблемы с запуском
 - Проверьте логи в Railway dashboard
