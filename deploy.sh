@@ -16,10 +16,12 @@ if [ ! -d ".git" ]; then
     exit 1
 fi
 
-# Используем правильный Dockerfile для Railway
+# Используем исправленный Dockerfile для Railway
 if [ -f "Dockerfile.railway" ]; then
     cp Dockerfile.railway Dockerfile
-    echo "✅ Dockerfile оптимизирован для Railway (WebSocket поддержка)"
+    echo "✅ Dockerfile исправлен для Railway (WebSocket + сборка)"
+    echo "   🔧 Добавлена обработка отсутствующих файлов"
+    echo "   🔧 Добавлены fallback конфигурации"
 else
     echo "⚠️  Dockerfile.railway не найден, используется стандартный Dockerfile"
 fi

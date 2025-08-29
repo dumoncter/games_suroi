@@ -12,12 +12,16 @@ if [ ! -d "client-dist" ] || [ ! -d "server-dist" ]; then
     exit 1
 fi
 
-echo "📝 Коммит: Исправление WebSocket + $(date +%Y-%m-%d_%H-%M-%S)"
+echo "📝 Коммит: Docker fix + WebSocket support + $(date +%Y-%m-%d_%H-%M-%S)"
 
-# Используем правильный Dockerfile
+# Используем исправленный Dockerfile для Railway
 if [ -f "Dockerfile.railway" ]; then
     cp Dockerfile.railway Dockerfile
-    echo "✅ Dockerfile для Railway активирован"
+    echo "✅ Исправленный Dockerfile для Railway активирован"
+    echo "   🔧 Добавлена обработка отсутствующих файлов"
+    echo "   🔧 Добавлены fallback конфигурации"
+else
+    echo "❌ Dockerfile.railway не найден"
 fi
 
 # Добавляем все файлы

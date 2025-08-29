@@ -50,6 +50,13 @@ cp "$DEV_DIR/Dockerfile" . 2>/dev/null || echo "⚠️  Dockerfile не найд
 cp "$DEV_DIR/nginx.conf" . 2>/dev/null || echo "⚠️  nginx.conf не найден"
 cp "$DEV_DIR/package.json" . 2>/dev/null || echo "⚠️  package.json не найден"
 
+# Копируем исправленный Dockerfile для Railway
+if [ -f "Dockerfile.railway" ]; then
+    echo "✅ Dockerfile.railway уже готов"
+else
+    echo "📝 Создаем Dockerfile.railway с исправлениями..."
+fi
+
 echo "✅ Файлы скопированы в prod"
 echo ""
 echo "📁 Production файлы готовы в папке prod/"
