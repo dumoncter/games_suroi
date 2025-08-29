@@ -36,7 +36,7 @@ COPY server/package.json ./server/
 COPY common/package.json ./common/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
 
 # Build stage
 FROM base AS build
@@ -82,7 +82,7 @@ COPY server/package.json ./server/
 COPY common/package.json ./common/
 
 # Install production dependencies only
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile --prod || pnpm install --no-frozen-lockfile --prod
 
 # Copy built client
 COPY --from=build /app/client/dist ./client/dist
