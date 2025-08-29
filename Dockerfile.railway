@@ -119,6 +119,12 @@ EXPOSE $PORT
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:$PORT/api/serverInfo || exit 1
 
+# Debug: Check file structure before starting
+RUN echo "=== DEBUG: File structure ===" && \
+    find /app -name "server.js" -type f 2>/dev/null || echo "server.js not found" && \
+    ls -la /app/server/dist/server/src/ 2>/dev/null || echo "server dist not found" && \
+    echo "=== END DEBUG ==="
+
 # Start server with Railway port using environment variable
 # Suroi server reads port from PORT environment variable or config
 CMD PORT=$PORT node server/dist/server/src/server.js
