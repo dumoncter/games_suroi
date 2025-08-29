@@ -108,10 +108,11 @@ RUN groupadd -g 1001 nodejs
 RUN useradd -u 1001 -g nodejs -s /bin/bash -m nodejs
 
 # Change ownership and nginx permissions
-RUN mkdir -p /var/cache/nginx /var/log/nginx /run && \
+RUN mkdir -p /var/cache/nginx /var/log/nginx /run /var/lib/nginx/body /var/lib/nginx/proxy /var/lib/nginx/fastcgi /var/lib/nginx/uwsgi /var/lib/nginx/scgi && \
     chown -R nodejs:nodejs /app && \
     chown -R nodejs:nodejs /var/log/nginx && \
     chown -R nodejs:nodejs /var/cache/nginx && \
+    chown -R nodejs:nodejs /var/lib/nginx && \
     touch /run/nginx.pid && \
     chown nodejs:nodejs /run/nginx.pid
 USER 1001
