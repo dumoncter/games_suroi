@@ -121,5 +121,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Start server with Railway port using environment variable
 # Suroi server reads port from PORT environment variable or config
-WORKDIR /app/server
-CMD PORT=$PORT node dist/server/src/server.js
+CMD PORT=$PORT node server/dist/server/src/server.js
