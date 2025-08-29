@@ -99,12 +99,12 @@ COPY server/config.production.json ./server/config.json
 COPY scripts/ ./scripts/
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
+RUN groupadd -g 1001 nodejs
+RUN useradd -u 1001 -g nodejs -s /bin/bash -m nodejs
 
 # Change ownership
 RUN chown -R nodejs:nodejs /app
-USER nodejs
+USER 1001
 
 # Expose ports
 EXPOSE 3000 8000
