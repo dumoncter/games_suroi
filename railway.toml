@@ -14,7 +14,7 @@ production = { }
 [[services]]
 id = "suroi-production"
 name = "Suroi Production"
-source = { repo = "https://github.com/dumoncter/games_suroi", path = "production-build" }
+source = { repo = "https://github.com/dumoncter/games_suroi", path = "prod" }
 healthcheckPath = "/api/serverInfo"
 domains = ["gamessuroi-production.up.railway.app"]
 
