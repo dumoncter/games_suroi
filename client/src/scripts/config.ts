@@ -7,8 +7,8 @@ export const Config = {
             name: "Suroi Game Portal",
             flag: "🚀",
             mainAddress: "https://gamessuroi-production.up.railway.app",
-            gameAddress: "wss://gamessuroi-production.up.railway.app/game/<gameID>",
-            offset: 1
+            gameAddress: "https://gamessuroi-production.up.railway.app/play",
+            offset: 0
         },
         dev: {
             name: "Local Server (Dev)",
@@ -23,10 +23,10 @@ export const Config = {
             offset: 1
         },
         production_tcp: {
-            name: "Production TCP Proxy",
+            name: "Railway Direct",
             mainAddress: "https://gamessuroi-production.up.railway.app",
-            gameAddress: "wss://gamessuroi-production.up.railway.app/play",
-            offset: 0
+            gameAddress: "ws://gamessuroi-production.up.railway.app",
+            offset: 8001
         }/* ,
         na: {
             name: "North America",
@@ -71,7 +71,7 @@ export const Config = {
             offset: 1
         } */
     },
-    defaultRegion: "production"
+    defaultRegion: "production_tcp"
 } satisfies ConfigType as ConfigType;
 
 export interface ConfigType {

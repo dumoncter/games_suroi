@@ -496,7 +496,17 @@ export async function setUpUI(): Promise<void> {
             }
         }
 
-        Game.connect(`${selectedRegion.gameAddress.replace("<gameID>", (response.gameID + selectedRegion.offset).toString())}/play?${params.toString()}`);
+        const gameId = response.gameID + selectedRegion.offset;
+        let connectUrl = selectedRegion.gameAddress;
+
+        // Для production_tcp используем порт как в локальном сервере
+        if (selectedRegion.name === "Railway Direct") {
+            connectUrl = `${connectUrl}:${gameId}/play`;
+        } else {
+            connectUrl = `${connectUrl.replace("<gameID>", gameId.toString())}/play`;
+        }
+
+        Game.connect(`${connectUrl}?${params.toString()}`);
         ui.splashMsg.hide();
 
         // Check again because there is a small chance that the create-team-menu element won't hide.
