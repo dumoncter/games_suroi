@@ -13,7 +13,7 @@ source = "."
 
 [services.suroi.env]
 NODE_ENV = "production"
-PORT = "3000"
+PORT = "8000"
 
 [services.suroi.build]
 builder = "dockerfile"
