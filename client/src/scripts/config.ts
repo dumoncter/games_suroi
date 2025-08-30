@@ -13,8 +13,8 @@ export const Config = {
         dev: {
             name: "Local Server (Dev)",
             mainAddress: "http://127.0.0.1:8000",
-            gameAddress: "ws://127.0.0.1:8000/game/<gameID>",
-            offset: 1
+            gameAddress: "ws://127.0.0.1:<gameID>",
+            offset: 8001
         }/* ,
         na: {
             name: "North America",
