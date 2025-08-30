@@ -25,8 +25,8 @@ export const Config = {
         production_tcp: {
             name: "Production TCP Proxy",
             mainAddress: "https://gamessuroi-production.up.railway.app",
-            gameAddress: "https://gamessuroi-production.up.railway.app/ws-fallback/<gameID>",
-            offset: 1
+            gameAddress: "wss://gamessuroi-production.up.railway.app/play",
+            offset: 0
         }/* ,
         na: {
             name: "North America",
@@ -71,7 +71,7 @@ export const Config = {
             offset: 1
         } */
     },
-    defaultRegion: "production_tcp"
+    defaultRegion: "production_fallback"
 } satisfies ConfigType as ConfigType;
 
 export interface ConfigType {
