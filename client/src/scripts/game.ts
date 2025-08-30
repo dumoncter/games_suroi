@@ -718,9 +718,10 @@ export const Game = new (class Game {
             }
         }
 
-        if (hasMovementSmoothing && this.activePlayer) {
-            CameraManager.setTargetPosition(this.activePlayer.container.position);
-        }
+        // Камера обновляется в player.ts, чтобы избежать двойного обновления
+        // if (hasMovementSmoothing && this.activePlayer) {
+        //     CameraManager.setTargetPosition(this.activePlayer.container.position);
+        // }
 
         for (const [image, spinSpeed] of this.spinningImages.entries()) {
             image.rotation += spinSpeed * delta;
