@@ -34,11 +34,14 @@ setTimeout(() => {
         if (code === 0) {
             console.log('✅ Nginx configuration is valid');
 
-            // Start nginx
+            // Start nginx with optimizations
             const nginxProcess = spawn('nginx', ['-g', 'daemon off;'], {
                 stdio: 'inherit',
                 env: {
-                    ...process.env
+                    ...process.env,
+                    // Оптимизации для производительности
+                    WORKER_PROCESSES: 'auto',
+                    WORKER_CONNECTIONS: '1024'
                 }
             });
 

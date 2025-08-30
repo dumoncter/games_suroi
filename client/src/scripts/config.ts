@@ -3,18 +3,18 @@ import type { ModeName } from "@common/definitions/modes";
 
 export const Config = {
     regions: {
-        // production: {
-        //     name: "Suroi Game Portal",
-        //     flag: "🚀",
-        //     mainAddress: "https://gamessuroi-production.up.railway.app",
-        //     gameAddress: "wss://gamessuroi-production.up.railway.app/game/<gameID>",
-        //     offset: 1
-        // },
+        production: {
+            name: "Suroi Game Portal",
+            flag: "🚀",
+            mainAddress: "https://gamessuroi-production.up.railway.app",
+            gameAddress: "wss://gamessuroi-production.up.railway.app/game/<gameID>",
+            offset: 1
+        },
         dev: {
             name: "Local Server (Dev)",
             mainAddress: "http://127.0.0.1:8000",
-            gameAddress: "ws://127.0.0.1:<gameID>",
-            offset: 8001
+            gameAddress: "ws://127.0.0.1:8000/game/<gameID>",
+            offset: 1
         }/* ,
         na: {
             name: "North America",
@@ -59,7 +59,7 @@ export const Config = {
             offset: 1
         } */
     },
-    defaultRegion: "dev"
+    defaultRegion: "production"
 } satisfies ConfigType as ConfigType;
 
 export interface ConfigType {

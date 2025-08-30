@@ -35,6 +35,24 @@ class CameraManagerClass {
 
     position = Vec(0, 0);
 
+    // Интерполяция позиции камеры для плавности
+    private _targetPosition = Vec(0, 0);
+    private _interpolationSpeed = 0.15; // Скорость интерполяции камеры
+
+    // Установка целевой позиции камеры с интерполяцией
+    setTargetPosition(target: Vector): void {
+        this._targetPosition = Vec.clone(target);
+
+        // Оптимизация для мобильных устройств - менее плавная интерполяция для производительности
+        if (InputManager.isMobile && GameConsole.getBuiltInCVar("cv_movement_smoothing")) {
+            // На мобильных устройствах уменьшаем скорость интерполяции для экономии ресурсов
+            const mobileInterpolationSpeed = GameConsole.getBuiltInCVar("cv_camera_interpolation_speed") * 0.7;
+            this._interpolationSpeed = Math.max(0.1, mobileInterpolationSpeed);
+        } else {
+            this._interpolationSpeed = GameConsole.getBuiltInCVar("cv_camera_interpolation_speed");
+        }
+    }
+
     private _zoom = DEFAULT_SCOPE.zoomLevel;
     get zoom(): number { return this._zoom; }
     set zoom(zoom: number) {
@@ -102,6 +120,15 @@ class CameraManagerClass {
     }
 
     update(): void {
+        // Интерполяция позиции камеры для плавности
+        const interpolationEnabled = GameConsole.getBuiltInCVar("cv_movement_smoothing");
+
+        if (interpolationEnabled) {
+            this.position = Vec.lerp(this.position, this._targetPosition, this._interpolationSpeed);
+        } else {
+            this.position = Vec.clone(this._targetPosition);
+        }
+
         let position = this.position;
 
         if (this.shaking) {

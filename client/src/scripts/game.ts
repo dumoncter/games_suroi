@@ -719,7 +719,7 @@ export const Game = new (class Game {
         }
 
         if (hasMovementSmoothing && this.activePlayer) {
-            CameraManager.position = this.activePlayer.container.position;
+            CameraManager.setTargetPosition(this.activePlayer.container.position);
         }
 
         for (const [image, spinSpeed] of this.spinningImages.entries()) {

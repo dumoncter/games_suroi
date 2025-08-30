@@ -481,20 +481,61 @@ class InputManagerClass {
             });
         }
 
-        // Gyro stuff
+        // Gyro stuff - улучшенная версия с плавным управлением
         const gyroAngle = GameConsole.getBuiltInCVar("mb_gyro_angle");
+        const gyroSmoothing = GameConsole.getBuiltInCVar("cv_gyroscope_smoothing");
+
         if (gyroAngle > 0) {
+            let lastGyroTime = 0;
+            let gyroCooldown = 300; // ms между переключениями
             let a = false;
             let b = false;
-            window.addEventListener("deviceorientation", gyro => {
+
+            // Сглаженные значения для плавного управления
+            let smoothedBeta = 0;
+            let smoothedGamma = 0;
+            const smoothingFactor = 0.1;
+
+            window.addEventListener("deviceorientation", (gyro) => {
+                const now = Date.now();
                 const angle = gyro.beta;
-                if (angle === null) return;
-                a = (angle <= -gyroAngle)
-                    ? (a ? a : GameConsole.handleQuery("cycle_items -1", "always"), true)
-                    : false;
-                b = (angle >= gyroAngle)
-                    ? (b ? b : GameConsole.handleQuery("cycle_items 1", "always"), true)
-                    : false;
+                const gamma = gyro.gamma;
+
+                if (angle === null || gamma === null) return;
+
+                // Применяем сглаживание если включено
+                if (gyroSmoothing) {
+                    smoothedBeta = smoothedBeta * (1 - smoothingFactor) + angle * smoothingFactor;
+                    smoothedGamma = smoothedGamma * (1 - smoothingFactor) + gamma * smoothingFactor;
+                } else {
+                    smoothedBeta = angle;
+                    smoothedGamma = gamma;
+                }
+
+                // Управление поворотом камеры/игрока через гироскоп
+                if (Game.activePlayer && !Game.gameOver) {
+                    const gyroSensitivity = GameConsole.getBuiltInCVar("cv_gyroscope_sensitivity");
+                    const targetRotation = -smoothedGamma * gyroSensitivity;
+
+                    // Плавная интерполяция поворота
+                    const currentRotation = Game.activePlayer.container.rotation;
+                    const interpolatedRotation = currentRotation + (targetRotation - currentRotation) * 0.1;
+
+                    if (GameConsole.getBuiltInCVar("cv_responsive_rotation")) {
+                        Game.activePlayer.container.rotation = interpolatedRotation;
+                        this.rotation = interpolatedRotation;
+                    }
+                }
+
+                // Переключение предметов с cooldown
+                if (now - lastGyroTime > gyroCooldown) {
+                    a = (smoothedBeta <= -gyroAngle)
+                        ? (a ? a : (GameConsole.handleQuery("cycle_items -1", "always"), lastGyroTime = now, true))
+                        : false;
+                    b = (smoothedBeta >= gyroAngle)
+                        ? (b ? b : (GameConsole.handleQuery("cycle_items 1", "always"), lastGyroTime = now, true))
+                        : false;
+                }
             });
         }
 
