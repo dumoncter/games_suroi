@@ -8,7 +8,8 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}🚀 Начинаем автоматический коммит и пуш игры Suroi в dev ветку${NC}"
+echo -e "${BLUE}🚀 Suroi Production Deploy Script${NC}"
+echo -e "${BLUE}=================================${NC}"
 
 # Настройка Git конфигурации, если не настроена
 if [ -z "$(git config user.name)" ]; then
@@ -18,12 +19,30 @@ if [ -z "$(git config user.name)" ]; then
     echo -e "${GREEN}✅ Git конфигурация настроена${NC}"
 fi
 
+# Проверяем текущую ветку
+CURRENT_BRANCH=$(git branch --show-current)
+echo -e "${YELLOW}📍 Текущая ветка: ${CURRENT_BRANCH}${NC}"
+
+if [ "$CURRENT_BRANCH" != "dev" ]; then
+    echo -e "${YELLOW}⚠️  Вы не в ветке dev. Переключаемся...${NC}"
+    git checkout dev || {
+        echo -e "${RED}❌ Ошибка при переключении на ветку dev${NC}"
+        exit 1
+    }
+fi
+
 # Проверяем, есть ли изменения для коммита
 if [ -z "$(git status --porcelain)" ]; then
     echo -e "${YELLOW}⚠️  Нет изменений для коммита${NC}"
     echo -e "${GREEN}✅ Репозиторий уже актуален${NC}"
+    echo -e "${BLUE}🌐 Railway URL: https://gamessuroi-production.up.railway.app${NC}"
     exit 0
 fi
+
+# Показываем статус изменений
+echo "📋 Изменения для коммита:"
+git status --short
+echo ""
 
 # Добавляем все изменения
 echo "📁 Добавляем все изменения..."
@@ -53,14 +72,25 @@ if git push origin dev; then
     echo -e "${GREEN}🔗 Dev ветка обновлена!${NC}"
 else
     echo -e "${RED}❌ Ошибка при пуше в dev ветку${NC}"
-    echo -e "${YELLOW}💡 Возможно, нужно сначала сделать pull:${NC}"
-    echo "   git pull origin dev"
+    echo -e "${YELLOW}💡 Возможные решения:${NC}"
+    echo "   • Проверьте подключение к интернету"
+    echo "   • Убедитесь что у вас есть права на push"
+    echo "   • Попробуйте: git pull origin dev --rebase"
     exit 1
 fi
 
 echo ""
-echo -e "${GREEN}🎉 Все операции выполнены успешно!${NC}"
-echo -e "${GREEN}🔄 Railway пересоберет Docker образ на базе dev ветки${NC}"
-echo -e "${GREEN}🌐 Docker будет собирать продакшн версию с nginx прокси${NC}"
-echo "📊 Последний коммит: $(git log --oneline -1)"
-echo -e "${YELLOW}⏱️  Ожидайте завершения сборки на Railway...${NC}"
+echo -e "${GREEN}🎉 Деплой завершен успешно!${NC}"
+echo ""
+echo -e "${BLUE}🔄 Railway автоматически:${NC}"
+echo -e "${BLUE}   📦 Соберет Docker образ из dev ветки${NC}"
+echo -e "${BLUE}   🏗️  Перекомпилирует TypeScript${NC}"
+echo -e "${BLUE}   🌐 Запустит nginx + Node.js сервер${NC}"
+echo -e "${BLUE}   🔌 Настроит WebSocket прокси${NC}"
+echo ""
+echo -e "${YELLOW}⏱️  Ожидайте 2-5 минут для завершения сборки${NC}"
+echo ""
+echo -e "${GREEN}🌐 Production URL: https://gamessuroi-production.up.railway.app${NC}"
+echo ""
+echo "📊 Последний коммит:"
+git log --oneline -1
