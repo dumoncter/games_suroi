@@ -496,14 +496,13 @@ export async function setUpUI(): Promise<void> {
             }
         }
 
-        const gameId = response.gameID + selectedRegion.offset;
         let connectUrl = selectedRegion.gameAddress;
 
-        // Для production_tcp используем порт как в локальном сервере
-        if (selectedRegion.name === "Railway Direct") {
-            connectUrl = `${connectUrl}:${gameId}/play`;
+        // Для продакшена подключаемся напрямую к /play
+        if (selectedRegion.name === "Suroi Game Portal") {
+            connectUrl = `${connectUrl}/play`;
         } else {
-            connectUrl = `${connectUrl.replace("<gameID>", gameId.toString())}/play`;
+            connectUrl = `${connectUrl.replace("<gameID>", (response.gameID + selectedRegion.offset).toString())}/play`;
         }
 
         Game.connect(`${connectUrl}?${params.toString()}`);

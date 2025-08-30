@@ -7,7 +7,7 @@ export const Config = {
             name: "Suroi Game Portal",
             flag: "🚀",
             mainAddress: "https://gamessuroi-production.up.railway.app",
-            gameAddress: "https://gamessuroi-production.up.railway.app/play",
+            gameAddress: "wss://gamessuroi-production.up.railway.app",
             offset: 0
         },
         dev: {
@@ -71,7 +71,7 @@ export const Config = {
             offset: 1
         } */
     },
-    defaultRegion: "production_tcp"
+    defaultRegion: "production"
 } satisfies ConfigType as ConfigType;
 
 export interface ConfigType {
