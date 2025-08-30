@@ -148,6 +148,7 @@ export const CVarCasters = Object.freeze({
     cv_camera_interpolation_speed: Casters.toNumber,
     cv_gyroscope_smoothing: Casters.toBoolean,
     cv_gyroscope_sensitivity: Casters.toNumber,
+    cv_debug_websocket: Casters.toBoolean,
 
     cv_antialias: Casters.toBoolean,
     cv_renderer: Casters.generateUnionCaster(["webgl1", "webgl2", "webgpu"]),
@@ -279,9 +280,10 @@ export const defaultClientCVars: SimpleCVarMapping = Object.freeze({
     cv_weapon_slot_style: "colored",
     cv_movement_smoothing: true,
     cv_responsive_rotation: true,
-    cv_camera_interpolation_speed: 0.15,
+    cv_camera_interpolation_speed: 0.25, // Увеличена для устранения дергания
     cv_gyroscope_smoothing: true,
     cv_gyroscope_sensitivity: 0.02,
+    cv_debug_websocket: false, // Отладка WebSocket соединений
 
     cv_antialias: true,
     cv_renderer: "webgl2",

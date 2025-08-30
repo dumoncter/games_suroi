@@ -15,6 +15,18 @@ export const Config = {
             mainAddress: "http://127.0.0.1:8000",
             gameAddress: "ws://127.0.0.1:<gameID>",
             offset: 8001
+        },
+        production_fallback: {
+            name: "Production Fallback (HTTP)",
+            mainAddress: "https://gamessuroi-production.up.railway.app",
+            gameAddress: "https://gamessuroi-production.up.railway.app/game/<gameID>",
+            offset: 1
+        },
+        production_tcp: {
+            name: "Production TCP Proxy",
+            mainAddress: "https://gamessuroi-production.up.railway.app",
+            gameAddress: "https://gamessuroi-production.up.railway.app/ws-fallback/<gameID>",
+            offset: 1
         }/* ,
         na: {
             name: "North America",

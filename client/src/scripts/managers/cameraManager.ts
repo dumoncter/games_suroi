@@ -37,19 +37,28 @@ class CameraManagerClass {
 
     // Интерполяция позиции камеры для плавности
     private _targetPosition = Vec(0, 0);
-    private _interpolationSpeed = 0.15; // Скорость интерполяции камеры
+    private _interpolationSpeed = 0.25; // Увеличенная скорость интерполяции для устранения дергания
 
     // Установка целевой позиции камеры с интерполяцией
     setTargetPosition(target: Vector): void {
+        // Более плавная интерполяция для устранения дергания
+        const distance = Vec.distance(this._targetPosition, target);
+
+        // Если расстояние большое - используем быструю интерполяцию
+        // Если расстояние маленькое - используем медленную для плавности
+        if (distance > 50) {
+            this._interpolationSpeed = 0.4; // Быстрая интерполяция для больших перемещений
+        } else if (distance > 10) {
+            this._interpolationSpeed = 0.25; // Средняя интерполяция
+        } else {
+            this._interpolationSpeed = 0.15; // Медленная интерполяция для плавности
+        }
+
         this._targetPosition = Vec.clone(target);
 
-        // Оптимизация для мобильных устройств - менее плавная интерполяция для производительности
+        // Дополнительная оптимизация для мобильных устройств
         if (InputManager.isMobile && GameConsole.getBuiltInCVar("cv_movement_smoothing")) {
-            // На мобильных устройствах уменьшаем скорость интерполяции для экономии ресурсов
-            const mobileInterpolationSpeed = GameConsole.getBuiltInCVar("cv_camera_interpolation_speed") * 0.7;
-            this._interpolationSpeed = Math.max(0.1, mobileInterpolationSpeed);
-        } else {
-            this._interpolationSpeed = GameConsole.getBuiltInCVar("cv_camera_interpolation_speed");
+            this._interpolationSpeed *= 0.8; // Немного уменьшаем для мобильных
         }
     }
 
