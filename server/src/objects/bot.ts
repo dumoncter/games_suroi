@@ -80,6 +80,11 @@ export class Bot extends Player {
         weapons: true, ammo: true, healing: true, armor: true
     };
 
+    // Combat and target tracking
+    private lastTargetCheck = 0;
+    private targetCheckInterval = 2000; // Check for new targets every 2 seconds
+    private combatMode = false;
+
     // Bot stats based on difficulty
     private readonly reactionTime: number;
     private readonly accuracy: number;
@@ -190,6 +195,12 @@ export class Bot extends Player {
         // Update memory and surroundings
         this.updateMemory();
         this.checkStuck();
+
+        // Periodic target checking - be aggressive!
+        if (now - this.lastTargetCheck > this.targetCheckInterval) {
+            this.lastTargetCheck = now;
+            this.checkForBetterTargets();
+        }
 
         // Gas avoidance has highest priority
         if (this.shouldAvoidGas()) {
@@ -355,38 +366,99 @@ export class Bot extends Player {
             return;
         }
 
-        // Critical needs
+        // Critical needs - prioritize weapon above everything
         if (!hasGoodWeapon) {
             this.currentState = BotState.LOOTING;
-            this.currentGoal = { type: 'loot', priority: 9 };
+            this.currentGoal = { type: 'loot', priority: 10 };
             return;
         }
 
         if (needsAmmo) {
             this.currentState = BotState.LOOTING;
-            this.currentGoal = { type: 'loot', priority: 8 };
+            this.currentGoal = { type: 'loot', priority: 9 };
             return;
         }
 
-        // Combat opportunities
+        // Combat opportunities - be aggressive!
         const nearestEnemy = this.findNearestEnemy();
-        if (nearestEnemy && this.shouldEngageTarget(nearestEnemy) && hasGoodWeapon) {
-            this.currentState = BotState.HUNTING;
-            this.currentGoal = { type: 'enemy', target: nearestEnemy, priority: 7 };
-            return;
+        if (nearestEnemy) {
+            const enemyDistance = Geometry.distance(this.position, nearestEnemy.position);
+
+            // Always hunt if enemy is close, even without perfect weapon
+            if (enemyDistance < 100) {
+                this.currentState = BotState.HUNTING;
+                this.currentGoal = { type: 'enemy', target: nearestEnemy, priority: 8 };
+                return;
+            }
+
+            // Hunt if we have advantage
+            if (this.shouldEngageTarget(nearestEnemy) && hasGoodWeapon) {
+                this.currentState = BotState.HUNTING;
+                this.currentGoal = { type: 'enemy', target: nearestEnemy, priority: 7 };
+                return;
+            }
         }
 
-        // Resource gathering
+        // Resource gathering - always look for good loot
         const bestLoot = this.findBestLoot();
-        if (bestLoot && bestLoot.priority >= ItemPriority.MEDIUM) {
+        if (bestLoot && bestLoot.priority >= ItemPriority.LOW) {
             this.currentState = BotState.LOOTING;
             this.currentGoal = { type: 'loot', target: bestLoot.item, priority: 6 };
+            return;
+        }
+
+        // If no good loot nearby, actively search for unexplored areas
+        if (!bestLoot || bestLoot.priority < ItemPriority.HIGH) {
+            this.currentState = BotState.EXPLORING;
+            this.currentGoal = { type: 'explore', priority: 5 };
+            return;
+        }
+
+        // Always be ready to fight - check for enemies constantly
+        if (nearestEnemy && Geometry.distance(this.position, nearestEnemy.position) < 200) {
+            this.currentState = BotState.HUNTING;
+            this.currentGoal = { type: 'enemy', target: nearestEnemy, priority: 6 };
             return;
         }
 
         // Exploration
         this.currentState = BotState.EXPLORING;
         this.currentGoal = { type: 'explore', priority: 1 };
+    }
+
+    private checkForBetterTargets(): void {
+        // Always be on the lookout for better opportunities
+
+        // Check for closer enemies
+        const nearestEnemy = this.findNearestEnemy();
+        if (nearestEnemy) {
+            const enemyDistance = Geometry.distance(this.position, nearestEnemy.position);
+
+            // If enemy is very close, switch to combat immediately
+            if (enemyDistance < 80 && (this.currentState !== BotState.HUNTING || this.currentTarget !== nearestEnemy)) {
+                this.currentState = BotState.HUNTING;
+                this.currentTarget = nearestEnemy;
+                this.combatMode = true;
+                return;
+            }
+        }
+
+        // Check for better loot
+        const bestLoot = this.findBestLoot();
+        if (bestLoot && bestLoot.priority >= ItemPriority.HIGH) {
+            if (this.currentState !== BotState.LOOTING || this.currentTarget !== bestLoot.item) {
+                this.currentState = BotState.LOOTING;
+                this.currentTarget = bestLoot.item;
+                return;
+            }
+        }
+
+        // If we're in exploration and find enemy, switch to hunting
+        if (this.currentState === BotState.EXPLORING && nearestEnemy && Geometry.distance(this.position, nearestEnemy.position) < 120) {
+            this.currentState = BotState.HUNTING;
+            this.currentTarget = nearestEnemy;
+            this.combatMode = true;
+        }
     }
 
     private findBestLoot(): { item: Loot, priority: ItemPriority } | undefined {
@@ -886,11 +958,16 @@ export class Bot extends Player {
             this.currentTarget = nearbyLoot;
         }
 
-        // Check for nearby enemies
+        // Check for nearby enemies - be very aggressive
         const nearbyEnemy = this.findNearestEnemy();
-        if (nearbyEnemy && this.shouldEngageTarget(nearbyEnemy)) {
-            this.currentState = BotState.HUNTING;
-            this.currentTarget = nearbyEnemy;
+        if (nearbyEnemy) {
+            const enemyDistance = Geometry.distance(this.position, nearbyEnemy.position);
+            // Engage enemies within reasonable distance
+            if (enemyDistance < 120) {
+                this.currentState = BotState.HUNTING;
+                this.currentTarget = nearbyEnemy;
+                return;
+            }
         }
     }
 
@@ -913,7 +990,15 @@ export class Bot extends Player {
             // Close enough to loot
             this.stopMovement();
             // Loot will be collected automatically by game mechanics
-            this.currentState = BotState.EXPLORING;
+
+            // After looting, immediately look for enemies to fight
+            const nearestEnemy = this.findNearestEnemy();
+            if (nearestEnemy && Geometry.distance(this.position, nearestEnemy.position) < 150) {
+                this.currentState = BotState.HUNTING;
+                this.currentTarget = nearestEnemy;
+            } else {
+                this.currentState = BotState.EXPLORING;
+            }
         } else {
             // Move towards loot
             this.moveTowards(target.position);
@@ -932,7 +1017,44 @@ export class Bot extends Player {
             return;
         }
 
-        this.attackEnemy(target);
+        const distance = Geometry.distance(this.position, target.position);
+        const hasWeapon = this.inventory.hasWeapon(0);
+
+        // If we have a weapon, use it
+        if (hasWeapon) {
+            this.attackEnemy(target);
+        } else {
+            // No weapon - try melee combat if close enough
+            if (distance < 20) {
+                this.meleeAttack(target);
+            } else {
+                // Too far for melee, need to find weapon first
+                this.currentState = BotState.LOOTING;
+                this.currentGoal = { type: 'loot', priority: 9 };
+                return;
+            }
+        }
+    }
+
+    private meleeAttack(target: Player): void {
+        const distance = Geometry.distance(this.position, target.position);
+
+        if (distance < 15) {
+            // Close enough for melee
+            this.stopMovement();
+            this.faceTowards(target.position);
+
+            // Try to attack with melee
+            if (this.inventory.hasWeapon(2)) { // Melee slot
+                this.attacking = true;
+            } else {
+                // No melee weapon, just punch
+                this.attacking = true;
+            }
+        } else {
+            // Move closer for melee
+            this.moveTowards(target.position);
+        }
     }
 
     private executeFleeing(): void {
@@ -943,6 +1065,19 @@ export class Bot extends Player {
     private executeUpgrading(): void {
         // Check if we need to upgrade equipment
         this.evaluateEquipmentNeeds();
+
+        // If we have critical needs, look for them
+        if (this.inventoryNeeds.weapons) {
+            this.currentState = BotState.LOOTING;
+            return;
+        }
+
+        if (this.inventoryNeeds.ammo) {
+            this.currentState = BotState.LOOTING;
+            return;
+        }
+
+        // Otherwise continue exploring
         this.currentState = BotState.EXPLORING;
     }
 
@@ -1283,18 +1418,18 @@ export class Bot extends Player {
         // Always engage if target is very close
         if (distance < 30) return true;
 
-        // Engage based on behavior type
+        // Engage based on behavior type - be more aggressive
         switch (this.config.behavior) {
             case BotBehavior.AGGRESSIVE:
-                return distance < 120;
+                return distance < 150; // More aggressive
             case BotBehavior.STRATEGIC:
-                return distance < 100 && healthRatio > 0.4;
+                return distance < 120 && healthRatio > 0.3; // Less health requirement
             case BotBehavior.DEFENSIVE:
-                return distance < 50;
+                return distance < 80; // More aggressive than before
             case BotBehavior.SURVIVAL:
-                return distance < 30; // Only when very close
+                return distance < 50; // More aggressive for survival
             default:
-                return distance < 80;
+                return distance < 100; // Default more aggressive
         }
     }
 
