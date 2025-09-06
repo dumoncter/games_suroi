@@ -25,7 +25,7 @@ export const Config = {
         production_tcp: {
             name: "Railway Direct",
             mainAddress: "https://gamessuroi-production.up.railway.app",
-            gameAddress: "ws://gamessuroi-production.up.railway.app",
+            gameAddress: "wss://gamessuroi-production.up.railway.app",
             offset: 8001
         }/* ,
         na: {
