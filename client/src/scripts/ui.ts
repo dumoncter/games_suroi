@@ -141,6 +141,11 @@ export async function fetchServerData(): Promise<void> {
     const regionUICache: Record<string, JQuery<HTMLLIElement>> = {};
 
     for (const [regionID, { flag }] of regionMap) {
+        // Hide dev region when not on localhost
+        if (regionID === "dev" && !window.location.hostname.includes("127.0.0.1") && !window.location.hostname.includes("localhost")) {
+            continue;
+        }
+
         serverList.append(
             regionUICache[regionID] = $<HTMLLIElement>(`
                 <li class="server-list-item" data-region="${regionID}">
@@ -157,22 +162,18 @@ export async function fetchServerData(): Promise<void> {
     ui.loaderText.text(getTranslatedString("loading_fetching_data"));
     let selectedRegionID = GameConsole.getBuiltInCVar("cv_region");
 
-    // If cv_region is not set or empty, use production for Railway
-    if (!selectedRegionID || selectedRegionID === "") {
-        if (!window.location.hostname.includes("127.0.0.1") && !window.location.hostname.includes("localhost")) {
-            selectedRegionID = "production";
-            GameConsole.setBuiltInCVar("cv_region", "production");
-        }
-    }
-
-    // If cv_region is set to dev but we're not on localhost, switch to production
-    if (selectedRegionID === "dev" && !window.location.hostname.includes("127.0.0.1") && !window.location.hostname.includes("localhost")) {
-        console.log("Dev region selected but not on localhost, switching to production");
+    // Always use production for Railway deployment
+    if (!window.location.hostname.includes("127.0.0.1") && !window.location.hostname.includes("localhost")) {
         selectedRegionID = "production";
         GameConsole.setBuiltInCVar("cv_region", "production");
     }
 
     const regionPromises = Object.entries(regionMap).map(async([_, [regionID, region]]) => {
+        // Skip dev region when not on localhost
+        if (regionID === "dev" && !window.location.hostname.includes("127.0.0.1") && !window.location.hostname.includes("localhost")) {
+            return;
+        }
+
         const listItem = regionUICache[regionID];
 
         const pingStartTime = Date.now();

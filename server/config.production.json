@@ -3,7 +3,7 @@
     "hostname": "0.0.0.0",
     "port": 8001,
     "map": "normal",
-    "teamMode": "solo",
+    "teamMode": "normal",
     "spawn": { "mode": "default" },
     "maxPlayersPerGame": 80,
     "maxGames": 5,
