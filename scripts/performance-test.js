@@ -196,3 +196,4 @@ console.log('  cv_camera_interpolation_speed: 0.08');
 console.log('  cv_movement_smoothing: false');
 console.log('  cv_gyroscope_sensitivity: 0.01');
 console.log('  cv_gyroscope_smoothing: false');
+
