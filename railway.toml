@@ -1,16 +1,7 @@
-[build]
-builder = "dockerfile"
-
-[deploy]
-startCommand = "pnpm start"
-healthcheckPath = "/api/serverInfo"
-healthcheckTimeout = 300
-restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 10
-
 # Solo Battles Server
 [services.suroi-solo]
 source = "."
+buildCommand = "pnpm build"
 
 [services.suroi-solo.env]
 NODE_ENV = "production"
@@ -20,9 +11,17 @@ PORT = "8082"
 [services.suroi-solo.build]
 builder = "dockerfile"
 
+[services.suroi-solo.deploy]
+startCommand = "pnpm start"
+healthcheckPath = "/api/serverInfo"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
 # Team Battles Server
 [services.suroi-team]
 source = "."
+buildCommand = "pnpm build"
 
 [services.suroi-team.env]
 NODE_ENV = "production"
@@ -31,3 +30,10 @@ PORT = "8083"
 
 [services.suroi-team.build]
 builder = "dockerfile"
+
+[services.suroi-team.deploy]
+startCommand = "pnpm start"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
