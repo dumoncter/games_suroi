@@ -40,7 +40,7 @@ pnpm dev:server
 
 - **Клиент (браузер)**: http://127.0.0.1:3000
 - **Сервер (API)**: http://127.0.0.1:8000
-- **Production**: https://gamessuroi-production.up.railway.app
+- **Production**: https://suroi.neonpsh.games
 
 ## Диагностика проблем
 

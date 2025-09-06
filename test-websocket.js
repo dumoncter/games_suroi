@@ -10,9 +10,9 @@ const https = require('https');
 const http = require('http');
 
 const testUrls = [
-    'wss://gamessuroi-production.up.railway.app/game/1',
+    'wss://suroi.neonpsh.games/game/1',
     'ws://127.0.0.1:8000/game/1',
-    'https://gamessuroi-production.up.railway.app/api/serverInfo',
+    'https://suroi.neonpsh.games/api/serverInfo',
     'http://127.0.0.1:8000/api/serverInfo'
 ];
 
