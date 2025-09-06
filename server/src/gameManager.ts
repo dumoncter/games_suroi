@@ -295,6 +295,7 @@ if (!Cluster.isPrimary) {
             const webSocketKey = req.getHeader("sec-websocket-key");
             const webSocketProtocol = req.getHeader("sec-websocket-protocol");
             const webSocketExtensions = req.getHeader("sec-websocket-extensions");
+            const isBot = req.getHeader("x-bot-client") === "true";
 
             if (simultaneousConnections?.isLimited(ip)) {
                 game.warn(ip, "exceeded maximum simultaneous connections");
@@ -327,7 +328,8 @@ if (!Cluster.isPrimary) {
                     isDev,
                     nameColor,
                     lobbyClearing: searchParams.get("lobbyClearing") === "true",
-                    weaponPreset: searchParams.get("weaponPreset") ?? ""
+                    weaponPreset: searchParams.get("weaponPreset") ?? "",
+                    isBot
                 } satisfies PlayerSocketData,
                 webSocketKey,
                 webSocketProtocol,

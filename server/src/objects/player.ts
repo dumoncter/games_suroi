@@ -67,6 +67,7 @@ export interface PlayerSocketData {
     readonly nameColor?: number
     readonly lobbyClearing: boolean
     readonly weaponPreset: string
+    readonly isBot?: boolean
 }
 
 export class Player extends BaseGameObject.derive(ObjectCategory.Player) {
@@ -81,6 +82,7 @@ export class Player extends BaseGameObject.derive(ObjectCategory.Player) {
 
     name: string;
     readonly ip?: string;
+    isBot = false;
 
     halloweenThrowableSkin = false;
     activeBloodthirstEffect = false;
@@ -570,12 +572,16 @@ export class Player extends BaseGameObject.derive(ObjectCategory.Player) {
         this.isDev = data.isDev ?? false;
         this.nameColor = data.nameColor ?? 0;
         this.hasColor = data.nameColor !== undefined;
+        this.isBot = data.isBot ?? false;
 
         game.addTimeout(() => {
             if (!this.joined) {
-                this.disconnect("JoinPacket not received after 5 seconds");
+                this.disconnect(this.isBot
+                    ? "JoinPacket not received after 15 seconds (bot)"
+                    : "JoinPacket not received after 5 seconds"
+                );
             }
-        }, 5000);
+        }, this.isBot ? 15000 : 5000);
 
         this.loadout = {
             skin: Loots.fromString("hazel_jumpsuit"),
