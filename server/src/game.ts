@@ -51,6 +51,7 @@ import { IDAllocator } from "./utils/idAllocator";
 import { Cache, getAllLoots, getSpawnableLoots, ItemRegistry } from "./utils/lootHelpers";
 import { cleanUsername, modeFromMap } from "./utils/misc";
 import { MapIndicator } from "./objects/mapIndicator";
+import { Bot } from "./objects/bot";
 
 export class Game implements GameData {
     public readonly id: number;
@@ -71,6 +72,7 @@ export class Game implements GameData {
     readonly livingPlayers = new Set<Player>();
     readonly connectedPlayers = new Set<Player>();
     readonly spectatablePlayers: Player[] = [];
+    readonly bots = new Set<Bot>();
     /**
      * New players created this tick
      */
@@ -260,6 +262,14 @@ export class Game implements GameData {
         this.pluginManager.emit("game_created", this);
         this.log(`Created in ${Date.now() - this._start} ms`);
 
+        // Spawn bots immediately after game creation
+        this.addTimeout(() => {
+            if (Config.bots?.enabled && Config.bots.count > 0) {
+                this.log(`Auto-spawning ${Config.bots.count} bots...`);
+                this.spawnBots();
+            }
+        }, 500);
+
         // Start the tick loop
         this.tick();
     }
@@ -439,6 +449,11 @@ export class Game implements GameData {
         // First loop over players: movement, animations, & actions
         for (const player of this.livingPlayers) {
             player.update();
+        }
+
+        // Update bots
+        for (const bot of this.bots) {
+            bot.update();
         }
 
         // Serialize dirty objects
@@ -792,10 +807,21 @@ export class Game implements GameData {
                 this.setGameData({ startedTime: this.now });
                 this.gas.advanceGasStage();
 
-                this.addTimeout(() => {
-                    this.log("Preventing new players from joining");
-                    this.setGameData({ allowJoin: false });
-                }, (this.spawnWindow * 1000) - 3000);
+        this.addTimeout(() => {
+            this.log("Preventing new players from joining");
+            this.setGameData({ allowJoin: false });
+        }, (this.spawnWindow * 1000) - 3000);
+
+        // Spawn bots if enabled
+        this.spawnBots();
+
+        // Also spawn bots immediately when game starts
+        this.addTimeout(() => {
+            if (Config.bots?.enabled && Config.bots.count > 0) {
+                this.log("Spawning bots at game start...");
+                this.spawnBots();
+            }
+        }, 1000);
             }, 3000);
         }
 
@@ -818,6 +844,56 @@ export class Game implements GameData {
             }
         }
         this.pluginManager.emit("player_did_join", { player, joinPacket: packet });
+    }
+
+    addBot(position: Vector, config: import("./objects/bot").BotConfig): Bot {
+        const bot = new Bot(this, position, config);
+        this.bots.add(bot);
+        return bot;
+    }
+
+    removeBot(bot: Bot): void {
+        this.bots.delete(bot);
+        if (this.livingPlayers.has(bot)) {
+            this.livingPlayers.delete(bot);
+        }
+        if (this.connectedPlayers.has(bot)) {
+            this.connectedPlayers.delete(bot);
+        }
+        this.grid.removeObject(bot);
+        this.deletedPlayers.push(bot.id);
+        this.updateObjects = true;
+    }
+
+    private spawnBots(): void {
+        const botConfig = Config.bots;
+        if (!botConfig?.enabled || !botConfig.count) return;
+
+        this.log(`Spawning ${botConfig.count} bots...`);
+
+        for (let i = 0; i < botConfig.count; i++) {
+            const spawnPosition = this.map.getRandomPosition(
+                new CircleHitbox(5),
+                {
+                    maxAttempts: 500,
+                    spawnMode: MapObjectSpawnMode.GrassAndSand,
+                    collides: position => Geometry.distanceSquared(position, this.gas.newPosition) >= this.gas.newRadius ** 2
+                }
+            );
+
+            if (spawnPosition) {
+                const botName = botConfig.names?.[i] || `Bot_${i + 1}`;
+                const config = {
+                    difficulty: botConfig.difficulty || "medium",
+                    behavior: botConfig.behavior || "strategic",
+                    name: botName
+                };
+
+                this.addBot(spawnPosition, config as any);
+            }
+        }
+
+        this.log(`Successfully spawned ${this.bots.size} bots`);
     }
 
     removePlayer(player: Player, reason?: string): void {

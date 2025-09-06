@@ -2,11 +2,18 @@
     "$schema": "config.schema.json",
     "hostname": "0.0.0.0",
     "port": 8001,
-    "map": "halloween",
+    "map": "normal",
     "teamMode": "solo",
     "spawn": { "mode": "default" },
     "maxPlayersPerGame": 80,
     "maxGames": 5,
+    "bots": {
+        "enabled": true,
+        "count": 10,
+        "difficulty": "medium",
+        "behavior": "strategic",
+        "names": ["Bot_Alpha", "Bot_Beta", "Bot_Gamma", "Bot_Delta", "Bot_Epsilon", "Bot_Zeta", "Bot_Eta", "Bot_Theta", "Bot_Iota", "Bot_Kappa"]
+    },
     "roles": {
         "developr": { "password": "developr", "isDev": true },
         "dev_managr": { "password": "dev_managr" },

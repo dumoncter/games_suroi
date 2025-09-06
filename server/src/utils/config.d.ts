@@ -183,6 +183,31 @@ export interface ConfigSchema {
    */
   maxCustomTeams?: number;
   /**
+   * Bot configuration for automated players.
+   */
+  bots?: {
+    /**
+     * Whether bots are enabled.
+     */
+    enabled: boolean;
+    /**
+     * Number of bots to spawn.
+     */
+    count: number;
+    /**
+     * Difficulty level of bots.
+     */
+    difficulty: "easy" | "medium" | "hard" | "expert";
+    /**
+     * Behavior pattern of bots.
+     */
+    behavior: "aggressive" | "defensive" | "strategic" | "survival";
+    /**
+     * List of bot names to use.
+     */
+    names?: string[];
+  };
+  /**
    * List of regexes to test usernames against. If a player's username matches one of the regexes in this array, it will be replaced with the default username.
    */
   usernameFilters?: string[];
