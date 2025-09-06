@@ -3,6 +3,13 @@ import type { ModeName } from "@common/definitions/modes";
 
 export const Config = {
     regions: {
+        production: {
+            name: "Suroi Game Portal",
+            flag: "🚀",
+            mainAddress: "https://gamessuroi-production.up.railway.app",
+            gameAddress: "wss://gamessuroi-production.up.railway.app",
+            offset: 0
+        },
         dev: {
             name: "Local Server",
             mainAddress: "http://127.0.0.1:8000",
@@ -52,7 +59,7 @@ export const Config = {
             offset: 1
         } */
     },
-    defaultRegion: "dev"
+    defaultRegion: "production"
 } satisfies ConfigType as ConfigType;
 
 export interface ConfigType {
