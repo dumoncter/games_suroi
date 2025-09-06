@@ -8,7 +8,7 @@ import { CircleHitbox } from "@common/utils/hitbox";
 import { Angle, Geometry } from "@common/utils/math";
 import { pickRandomInArray } from "@common/utils/random";
 import { Vec, type Vector } from "@common/utils/vector";
-import { type Game } from "../game";
+import { type Game, type Airdrop } from "../game";
 import { type PlayerSocketData } from "./player";
 import { Player } from "./player";
 import { type Loot } from "./loot";
@@ -45,6 +45,7 @@ export class Bot extends Player {
     private actionCooldown = 100; // ms between actions
     private path: Vector[] = [];
     private currentPathIndex = 0;
+    private currentPath: Vector[] = [];
 
     // Bot stats based on difficulty
     private readonly reactionTime: number;
@@ -220,19 +221,53 @@ export class Bot extends Player {
         const nearestEnemy = this.findNearestEnemy();
         const nearestWeapon = this.findNearestWeapon();
         const nearestAmmo = this.findAmmo();
+        const nearestLoot = this.findNearestLoot();
+        const nearestObstacle = this.findNearestObstacle();
         const needsAmmo = this.needsAmmo();
+        const healthPercentage = this.health / this.maxHealth;
 
         if (nearestEnemy && Geometry.distance(this.position, nearestEnemy.position) < 50) {
             this.fleeFrom(nearestEnemy.position);
         } else {
+            // Look for healing items if low health
+            const healingItem = this.findHealingItem();
+            if (healingItem && healthPercentage < 0.7) {
+                this.moveTowardsAndInteract(healingItem);
+                return;
+            }
+
             // Look for ammo first if needed
             if (nearestAmmo && needsAmmo) {
                 this.moveTowardsAndInteract(nearestAmmo);
-            } else if (nearestWeapon) {
-                this.moveTowardsAndInteract(nearestWeapon);
-            } else {
-                this.explore();
+                return;
             }
+
+            // Look for weapons if we don't have good ones
+            if (nearestWeapon && !this.hasGoodWeapon()) {
+                this.moveTowardsAndInteract(nearestWeapon);
+                return;
+            }
+
+            // Look for other valuable loot
+            if (nearestLoot) {
+                this.moveTowardsAndInteract(nearestLoot);
+                return;
+            }
+
+            // Look for obstacles to interact with
+            if (nearestObstacle && this.shouldInteractWithObstacle(nearestObstacle)) {
+                this.moveTowardsAndInteract(nearestObstacle);
+                return;
+            }
+
+            // Look for airdrops
+            const nearestAirdrop = this.findNearestAirdrop();
+            if (nearestAirdrop) {
+                this.moveTowards(nearestAirdrop.position);
+                return;
+            }
+
+            this.explore();
         }
     }
 
@@ -249,16 +284,15 @@ export class Bot extends Player {
         const needsAmmo = this.needsAmmo();
 
         if (nearestEnemy && this.canSeePlayer(nearestEnemy)) {
-            const enemyDistance = Geometry.distance(this.position, nearestEnemy.position);
-
-            // Attack if we have advantage
-            if (hasGoodWeapon && enemyDistance < 100 && healthPercentage > 0.3 && !needsAmmo) {
+            // Use improved target engagement logic
+            if (this.shouldEngageTarget(nearestEnemy) && hasGoodWeapon && !needsAmmo) {
                 this.attackEnemy(nearestEnemy);
                 return;
             }
 
             // Flee if we're weak or enemy is too close
-            if (healthPercentage < 0.3 || enemyDistance < 30) {
+            const enemyDistance = Geometry.distance(this.position, nearestEnemy.position);
+            if (healthPercentage < 0.3 || enemyDistance < 25) {
                 this.fleeFrom(nearestEnemy.position);
                 return;
             }
@@ -282,6 +316,34 @@ export class Bot extends Player {
             return;
         }
 
+        // Look for healing items if low health
+        const healingItem = this.findHealingItem();
+        if (healingItem && healthPercentage < 0.7) {
+            this.moveTowardsAndInteract(healingItem);
+            return;
+        }
+
+        // Look for other valuable loot
+        const nearestLoot = this.findNearestLoot();
+        if (nearestLoot) {
+            this.moveTowardsAndInteract(nearestLoot);
+            return;
+        }
+
+        // Look for obstacles to interact with (crates, barrels)
+        const nearestObstacle = this.findNearestObstacle();
+        if (nearestObstacle && this.shouldInteractWithObstacle(nearestObstacle)) {
+            this.moveTowardsAndInteract(nearestObstacle);
+            return;
+        }
+
+        // Look for airdrops
+        const nearestAirdrop = this.findNearestAirdrop();
+        if (nearestAirdrop) {
+            this.moveTowards(nearestAirdrop.position);
+            return;
+        }
+
         // Explore if no immediate threats or opportunities
         this.explore();
     }
@@ -289,15 +351,51 @@ export class Bot extends Player {
     private survivalBehavior(): void {
         const nearestWeapon = this.findNearestWeapon();
         const nearestAmmo = this.findAmmo();
+        const nearestLoot = this.findNearestLoot();
+        const nearestObstacle = this.findNearestObstacle();
+        const healingItem = this.findHealingItem();
         const needsAmmo = this.needsAmmo();
+        const healthPercentage = this.health / this.maxHealth;
 
+        // Priority 1: Survival - healing if low health
+        if (healingItem && healthPercentage < 0.6) {
+            this.moveTowardsAndInteract(healingItem);
+            return;
+        }
+
+        // Priority 2: Ammo if needed
         if (nearestAmmo && needsAmmo) {
             this.moveTowardsAndInteract(nearestAmmo);
-        } else if (nearestWeapon) {
-            this.moveTowardsAndInteract(nearestWeapon);
-        } else {
-            this.explore();
+            return;
         }
+
+        // Priority 3: Weapons if we don't have good ones
+        if (nearestWeapon && !this.hasGoodWeapon()) {
+            this.moveTowardsAndInteract(nearestWeapon);
+            return;
+        }
+
+        // Priority 4: Other valuable loot
+        if (nearestLoot) {
+            this.moveTowardsAndInteract(nearestLoot);
+            return;
+        }
+
+        // Priority 5: Obstacles to interact with
+        if (nearestObstacle && this.shouldInteractWithObstacle(nearestObstacle)) {
+            this.moveTowardsAndInteract(nearestObstacle);
+            return;
+        }
+
+        // Priority 6: Airdrops
+        const nearestAirdrop = this.findNearestAirdrop();
+        if (nearestAirdrop) {
+            this.moveTowards(nearestAirdrop.position);
+            return;
+        }
+
+        // Priority 7: Safe exploration
+        this.explore();
     }
 
     private findNearestEnemy(): Player | undefined {
@@ -305,12 +403,24 @@ export class Bot extends Player {
         let minDistance = Infinity;
 
         for (const player of this.game.livingPlayers) {
-            if (player === this || player.dead || (!this.game.isTeamMode || this.teamID === player.teamID)) continue;
+            if (player === this || player.dead) continue;
 
-            const distance = Geometry.distance(this.position, player.position);
-            if (distance < minDistance) {
-                minDistance = distance;
-                nearest = player;
+            // In solo mode, all other players are enemies
+            if (!this.game.isTeamMode) {
+                const distance = Geometry.distance(this.position, player.position);
+                if (distance < minDistance && distance < 200) { // Search within 200 units
+                    minDistance = distance;
+                    nearest = player;
+                }
+            } else {
+                // In team mode, only non-teammates are enemies
+                if (this.teamID !== player.teamID) {
+                    const distance = Geometry.distance(this.position, player.position);
+                    if (distance < minDistance && distance < 200) {
+                        minDistance = distance;
+                        nearest = player;
+                    }
+                }
             }
         }
 
@@ -467,51 +577,45 @@ export class Bot extends Player {
     }
 
     private explore(): void {
-        // Smart exploration with realistic movement patterns
-        if (Math.random() < 0.3) { // 30% chance to change direction (more realistic)
-            // Choose direction based on difficulty
-            const directionChange = Math.random();
+        // Realistic movement like human players
+        if (this.currentPath.length === 0 || Math.random() < 0.05) { // 5% chance to choose new direction
+            this.generateNewPath();
+        }
 
-            if (directionChange < 0.1) {
-                // Stop moving occasionally
+        this.followPath();
+    }
+
+    private generateNewPath(): void {
+        // Choose random direction and distance
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 50 + Math.random() * 100; // 50-150 units
+
+        const targetX = this.position.x + Math.cos(angle) * distance;
+        const targetY = this.position.y + Math.sin(angle) * distance;
+
+        // Create simple path (just direct line for now)
+        this.currentPath = [Vec(targetX, targetY)];
+        this.currentPathIndex = 0;
+    }
+
+    private followPath(): void {
+        if (this.currentPath.length === 0) return;
+
+        const target = this.currentPath[this.currentPathIndex];
+        const distance = Geometry.distance(this.position, target);
+
+        if (distance < 10) {
+            // Reached current waypoint
+            this.currentPathIndex++;
+            if (this.currentPathIndex >= this.currentPath.length) {
+                this.currentPath = [];
                 this.stopMovement();
-            } else {
-                // Move in random direction
-                const directions = [
-                    () => { this.movement.right = true; },
-                    () => { this.movement.left = true; },
-                    () => { this.movement.down = true; },
-                    () => { this.movement.up = true; }
-                ];
-
-                // Clear previous movement
-                this.stopMovement();
-
-                // Set new direction
-                const chosenDirection = pickRandomInArray(directions);
-                chosenDirection();
-
-                // Sometimes move diagonally
-                if (Math.random() < 0.3) {
-                    if (this.movement.right && Math.random() < 0.5) {
-                        this.movement.down = true;
-                    } else if (this.movement.left && Math.random() < 0.5) {
-                        this.movement.up = true;
-                    }
-                }
+                return;
             }
         }
 
-        // Face the direction we're moving
-        if (this.movement.right) {
-            this.rotation = 0;
-        } else if (this.movement.left) {
-            this.rotation = Math.PI;
-        } else if (this.movement.down) {
-            this.rotation = Math.PI / 2;
-        } else if (this.movement.up) {
-            this.rotation = -Math.PI / 2;
-        }
+        // Move towards target
+        this.moveTowards(target);
     }
 
     private tryReload(): void {
@@ -549,6 +653,140 @@ export class Bot extends Player {
             }
         }
         return false;
+    }
+
+    private findHealingItem(): Loot | undefined {
+        let nearest: Loot | undefined;
+        let minDistance = Infinity;
+
+        for (const loot of this.game.grid.pool.getCategory(ObjectCategory.Loot)) {
+            if (loot.dead) continue;
+
+            // Check if it's a healing item
+            if (loot.definition.idString.includes("cola") ||
+                loot.definition.idString.includes("meds") ||
+                loot.definition.idString.includes("soda")) {
+                const distance = Geometry.distance(this.position, loot.position);
+                if (distance < minDistance && distance < 120) {
+                    minDistance = distance;
+                    nearest = loot;
+                }
+            }
+        }
+
+        return nearest;
+    }
+
+    private findNearestLoot(): Loot | undefined {
+        let nearest: Loot | undefined;
+        let minDistance = Infinity;
+
+        for (const loot of this.game.grid.pool.getCategory(ObjectCategory.Loot)) {
+            if (loot.dead) continue;
+
+            // Skip ammo and weapons if we don't need them
+            const isAmmo = loot.definition.idString.includes("ammo");
+            const isWeapon = loot.definition.idString.includes("gun") ||
+                           loot.definition.idString.includes("melee") ||
+                           loot.definition.idString.includes("throwable");
+
+            if ((isAmmo && !this.needsAmmo()) || (isWeapon && this.hasGoodWeapon())) {
+                continue;
+            }
+
+            const distance = Geometry.distance(this.position, loot.position);
+            if (distance < minDistance && distance < 100) {
+                minDistance = distance;
+                nearest = loot;
+            }
+        }
+
+        return nearest;
+    }
+
+    private findNearestObstacle(): Obstacle | undefined {
+        let nearest: Obstacle | undefined;
+        let minDistance = Infinity;
+
+        for (const obstacle of this.game.grid.pool.getCategory(ObjectCategory.Obstacle)) {
+            if (obstacle.dead) continue;
+
+            // Look for crates and barrels that can be interacted with
+            if (obstacle.definition.idString.includes("crate") ||
+                obstacle.definition.idString.includes("barrel")) {
+                const distance = Geometry.distance(this.position, obstacle.position);
+                if (distance < minDistance && distance < 80) {
+                    minDistance = distance;
+                    nearest = obstacle;
+                }
+            }
+        }
+
+        return nearest;
+    }
+
+    private shouldInteractWithObstacle(obstacle: Obstacle): boolean {
+        // Don't interact with dangerous obstacles (explosive barrels)
+        if (obstacle.definition.idString.includes("barrel") &&
+            obstacle.definition.idString.includes("explosive")) {
+            return false;
+        }
+
+        // Interact with crates and safe barrels
+        return obstacle.definition.idString.includes("crate") ||
+               (obstacle.definition.idString.includes("barrel") &&
+                !obstacle.definition.idString.includes("explosive"));
+    }
+
+    private findNearestAirdrop(): Airdrop | undefined {
+        let nearest: Airdrop | undefined;
+        let minDistance = Infinity;
+
+        for (const airdrop of this.game.airdrops) {
+            const distance = Geometry.distance(this.position, airdrop.position);
+            if (distance < minDistance && distance < 500) { // Search within 500 units for airdrops
+                minDistance = distance;
+                nearest = airdrop;
+            }
+        }
+
+        return nearest;
+    }
+
+    private canAttackTarget(target: Player): boolean {
+        // Check if target is visible and in range
+        const distance = Geometry.distance(this.position, target.position);
+
+        // Don't attack if too far
+        if (distance > 150) return false;
+
+        // Check line of sight (simplified)
+        return this.canSeePlayer(target);
+    }
+
+    private shouldEngageTarget(target: Player): boolean {
+        const distance = Geometry.distance(this.position, target.position);
+        const healthRatio = this.health / this.maxHealth;
+
+        // Don't engage if we're heavily damaged and target is far
+        if (healthRatio < 0.3 && distance > 50) return false;
+
+        // Always engage if target is very close
+        if (distance < 30) return true;
+
+        // Engage based on behavior type
+        switch (this.config.behavior) {
+            case BotBehavior.AGGRESSIVE:
+                return distance < 120;
+            case BotBehavior.STRATEGIC:
+                return distance < 100 && healthRatio > 0.4;
+            case BotBehavior.DEFENSIVE:
+                return distance < 50;
+            case BotBehavior.SURVIVAL:
+                return distance < 30; // Only when very close
+            default:
+                return distance < 80;
+        }
     }
 
     // Override disconnect to handle bot cleanup
