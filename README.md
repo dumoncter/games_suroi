@@ -78,3 +78,4 @@ pnpm start
 ```
 
 Production builds are served using [NGINX](https://nginx.org). Visit [the wiki](https://github.com/HasangerGames/suroi/wiki/Self%E2%80%90hosting) for details on how to self-host.
+# Bot test commit
