@@ -8,12 +8,26 @@ healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
-[services.suroi]
+# Solo Battles Server
+[services.suroi-solo]
 source = "."
 
-[services.suroi.env]
+[services.suroi-solo.env]
 NODE_ENV = "production"
-PORT = "8000"
+SERVER_TYPE = "solo"
+PORT = "8082"
 
-[services.suroi.build]
+[services.suroi-solo.build]
+builder = "dockerfile"
+
+# Team Battles Server
+[services.suroi-team]
+source = "."
+
+[services.suroi-team.env]
+NODE_ENV = "production"
+SERVER_TYPE = "team"
+PORT = "8083"
+
+[services.suroi-team.build]
 builder = "dockerfile"

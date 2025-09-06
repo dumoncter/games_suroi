@@ -3,6 +3,20 @@ import type { ModeName } from "@common/definitions/modes";
 
 export const Config = {
     regions: {
+        solo: {
+            name: "Solo Battles",
+            flag: "👤",
+            mainAddress: "https://suroi.neonpsh.games",
+            gameAddress: "wss://suroi.neonpsh.games/solo/play",
+            offset: 0
+        },
+        team: {
+            name: "Team Battles",
+            flag: "👥",
+            mainAddress: "https://suroi.neonpsh.games",
+            gameAddress: "wss://suroi.neonpsh.games/team/play",
+            offset: 0
+        },
         production: {
             name: "NeonPSH",
             flag: "🚀",
@@ -13,6 +27,18 @@ export const Config = {
         dev: {
             name: "Local Server",
             mainAddress: "http://127.0.0.1:8000",
+            gameAddress: "ws://127.0.0.1:<gameID>",
+            offset: 8001
+        },
+        dev_solo: {
+            name: "Dev Solo",
+            mainAddress: "http://127.0.0.1:8082",
+            gameAddress: "ws://127.0.0.1:<gameID>",
+            offset: 8001
+        },
+        dev_team: {
+            name: "Dev Team",
+            mainAddress: "http://127.0.0.1:8083",
             gameAddress: "ws://127.0.0.1:<gameID>",
             offset: 8001
         }/* ,
