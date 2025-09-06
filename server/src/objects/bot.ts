@@ -5,7 +5,7 @@ import { Melees } from "@common/definitions/items/melees";
 import { Throwables } from "@common/definitions/items/throwables";
 import { Loots } from "@common/definitions/loots";
 import { CircleHitbox } from "@common/utils/hitbox";
-import { Angle, Geometry } from "@common/utils/math";
+import { Angle, Geometry, Numeric } from "@common/utils/math";
 import { pickRandomInArray } from "@common/utils/random";
 import { Vec, type Vector } from "@common/utils/vector";
 import { type Game, type Airdrop } from "../game";
@@ -228,7 +228,23 @@ export class Bot extends Player {
     }
 
     private shouldAvoidGas(): boolean {
-        return this.game.gas.isInGas(this.position);
+        // Check if currently in gas
+        if (this.game.gas.isInGas(this.position)) {
+            return true;
+        }
+
+        // Check if bot will be in gas soon (predictive behavior)
+        const currentRadius = this.game.gas.currentRadius;
+        const newRadius = this.game.gas.newRadius;
+        const distanceToCenter = Geometry.distance(this.position, this.game.gas.currentPosition);
+
+        // If gas is shrinking and we're close to the edge, start moving to center
+        if (newRadius < currentRadius && distanceToCenter > newRadius * 0.7) {
+            return true;
+        }
+
+        // Always stay in safe zone with margin
+        return distanceToCenter > currentRadius * 0.85;
     }
 
     private updateMemory(): void {
@@ -320,6 +336,18 @@ export class Bot extends Player {
         const hasGoodWeapon = this.hasGoodWeapon();
         const needsAmmo = this.needsAmmo();
 
+        // Gas awareness - high priority
+        const distanceToCenter = Geometry.distance(this.position, this.game.gas.currentPosition);
+        const currentRadius = this.game.gas.currentRadius;
+        const newRadius = this.game.gas.newRadius;
+
+        // If gas is shrinking and we're in danger zone, prioritize moving to center
+        if (newRadius < currentRadius && distanceToCenter > newRadius * 0.6) {
+            this.currentState = BotState.FLEEING;
+            this.currentGoal = { type: 'safe_zone', priority: 9 };
+            return;
+        }
+
         // Emergency situations
         if (healthRatio < 0.2) {
             this.currentState = BotState.FLEEING;
@@ -406,10 +434,52 @@ export class Bot extends Player {
     }
 
     private avoidGas(): void {
-        const safePosition = this.findSafePosition();
-        if (safePosition) {
-            this.moveTowards(safePosition);
+        const optimalPosition = this.findOptimalSafePosition();
+        if (optimalPosition) {
+            // Create path to optimal position
+            this.currentPath = [optimalPosition];
+            this.currentPathIndex = 0;
+            this.followPath();
+        } else {
+            // Fallback to center
+            const safePosition = this.findSafePosition();
+            if (safePosition) {
+                this.moveTowards(safePosition);
+            }
         }
+    }
+
+    private findOptimalSafePosition(): Vector | undefined {
+        const gasCenter = this.game.gas.currentPosition;
+        const currentRadius = this.game.gas.currentRadius;
+        const newRadius = this.game.gas.newRadius;
+
+        // Calculate future safe radius (with margin)
+        const futureSafeRadius = newRadius * 0.8; // 80% of new radius for safety
+
+        // Find optimal position in future safe zone
+        const distanceToCenter = Geometry.distance(this.position, gasCenter);
+
+        if (distanceToCenter <= futureSafeRadius) {
+            // Already in future safe zone, stay put or move slightly
+            return undefined;
+        }
+
+        // Calculate direction to center
+        const directionToCenter = Vec.sub(gasCenter, this.position);
+        const normalizedDirection = Vec.normalize(directionToCenter);
+
+        // Calculate target position inside future safe zone
+        const targetDistance = futureSafeRadius * 0.9; // 90% into safe zone
+        const targetPosition = Vec.add(gasCenter, Vec.scale(Vec.normalize(Vec.sub(this.position, gasCenter)), -targetDistance));
+
+        // Make sure target is within map bounds
+        const mapWidth = this.game.map.width;
+        const mapHeight = this.game.map.height;
+        const clampedX = Numeric.clamp(targetPosition.x, 50, mapWidth - 50);
+        const clampedY = Numeric.clamp(targetPosition.y, 50, mapHeight - 50);
+
+        return Vec(clampedX, clampedY);
     }
 
     private findSafePosition(): Vector | undefined {
@@ -791,16 +861,22 @@ export class Bot extends Player {
 
     // Execute different AI states
     private executeExploration(): void {
-        // Look for unexplored areas
-        const unexploredArea = this.findUnexploredArea();
-        if (unexploredArea) {
-            this.moveTowards(unexploredArea);
+        // Prioritize safe exploration within future gas zone
+        const safeExplorationTarget = this.findSafeExplorationTarget();
+        if (safeExplorationTarget) {
+            this.moveTowards(safeExplorationTarget);
         } else {
-            // Random exploration
-            if (this.currentPath.length === 0 || Math.random() < 0.1) {
-                this.generateExplorationPath();
+            // Look for any unexplored areas
+            const unexploredArea = this.findUnexploredArea();
+            if (unexploredArea && this.isPositionSafe(unexploredArea)) {
+                this.moveTowards(unexploredArea);
+            } else {
+                // Random exploration in safe areas
+                if (this.currentPath.length === 0 || Math.random() < 0.1) {
+                    this.generateSafeExplorationPath();
+                }
+                this.followPath();
             }
-            this.followPath();
         }
 
         // Check for nearby loot while exploring
@@ -860,15 +936,8 @@ export class Bot extends Player {
     }
 
     private executeFleeing(): void {
-        const safePosition = this.findSafePosition();
-        if (safePosition) {
-            this.moveTowards(safePosition);
-        } else {
-            // Move away from danger
-            const dangerDirection = Vec.sub(this.position, this.game.gas.currentPosition);
-            const fleePosition = Vec.add(this.position, Vec.scale(Vec.normalize(dangerDirection), 100));
-            this.moveTowards(fleePosition);
-        }
+        // Use smart gas avoidance with predictive behavior
+        this.avoidGas();
     }
 
     private executeUpgrading(): void {
@@ -944,6 +1013,31 @@ export class Bot extends Player {
         }
     }
 
+    private generateSafeExplorationPath(): void {
+        const safeTarget = this.findSafeExplorationTarget();
+        if (safeTarget) {
+            this.currentPath = [safeTarget];
+            this.currentPathIndex = 0;
+        } else {
+            // Generate random path within safe zone
+            const gasCenter = this.game.gas.currentPosition;
+            const newRadius = this.game.gas.newRadius;
+            const safeRadius = newRadius * 0.7; // Stay within 70% of safe zone
+
+            const angle = Math.random() * Math.PI * 2;
+            const distance = Math.random() * safeRadius * 0.8; // 80% of safe radius
+            const targetX = gasCenter.x + Math.cos(angle) * distance;
+            const targetY = gasCenter.y + Math.sin(angle) * distance;
+
+            // Ensure target is within map bounds
+            const clampedX = Numeric.clamp(targetX, 50, this.game.map.width - 50);
+            const clampedY = Numeric.clamp(targetY, 50, this.game.map.height - 50);
+
+            this.currentPath = [Vec(clampedX, clampedY)];
+            this.currentPathIndex = 0;
+        }
+    }
+
     private followPath(): void {
         if (this.currentPath.length === 0) return;
 
@@ -989,6 +1083,48 @@ export class Bot extends Player {
     private updateExploredAreas(): void {
         const areaKey = `${Math.floor(this.position.x / 50)}_${Math.floor(this.position.y / 50)}`;
         this.exploredAreas.add(areaKey);
+    }
+
+    private isPositionSafe(position: Vector): boolean {
+        const distanceToCenter = Geometry.distance(position, this.game.gas.currentPosition);
+        const currentRadius = this.game.gas.currentRadius;
+        const newRadius = this.game.gas.newRadius;
+
+        // Position is safe if it's well within future safe zone
+        return distanceToCenter <= newRadius * 0.75;
+    }
+
+    private findSafeExplorationTarget(): Vector | undefined {
+        const unexploredAreas = this.getUnexploredAreasInSafeZone();
+
+        if (unexploredAreas.length > 0) {
+            // Choose random safe unexplored area
+            return unexploredAreas[Math.floor(Math.random() * unexploredAreas.length)];
+        }
+
+        return undefined;
+    }
+
+    private getUnexploredAreasInSafeZone(): Vector[] {
+        const safeAreas: Vector[] = [];
+        const newRadius = this.game.gas.newRadius;
+        const gasCenter = this.game.gas.currentPosition;
+
+        // Check areas within future safe zone
+        const areasToCheck = 20;
+        for (let i = 0; i < areasToCheck; i++) {
+            const angle = (Math.PI * 2 * i) / areasToCheck;
+            const distance = newRadius * 0.6; // 60% into safe zone
+            const x = gasCenter.x + Math.cos(angle) * distance;
+            const y = gasCenter.y + Math.sin(angle) * distance;
+
+            const areaKey = `${Math.floor(x / 50)}_${Math.floor(y / 50)}`;
+            if (!this.exploredAreas.has(areaKey)) {
+                safeAreas.push(Vec(x, y));
+            }
+        }
+
+        return safeAreas;
     }
 
     private tryReload(): void {
