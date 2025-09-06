@@ -1218,8 +1218,48 @@ const maps = {
                 game.pluginManager.loadPlugin(
                     class extends GamePlugin {
                         protected initListeners(): void {
-                            // Bot creation removed - bots now handled by separate AI client
-                        }
+                            this.on("game_created", _game => {
+                                if (_game !== game) return;
+                                const createBot = (name: string): Player | undefined => {
+                                    const bot = game.addPlayer();
+                                    if (!bot) return;
+
+                                    game.activatePlayer(
+                                        bot,
+                                        {
+                                            type: PacketType.Join,
+                                            name,
+                                            isMobile: false,
+                                            skin: Loots.fromString("hazel_jumpsuit"),
+                                            emotes: Array.from({ length: 6 }, () => undefined),
+                                            protocolVersion: GameConstants.protocolVersion
+                                        }
+                                    );
+
+                                    return bot;
+                                };
+
+                                const teleportPlayer = (player: Player, position: Vector): void => {
+                                    player.position = position;
+                                    player.updateObjects = true;
+                                    player.game.grid.updateObject(player);
+                                    player.setDirty();
+                                };
+
+                                for (let i = 0, l = Guns.definitions.length; i < l; i++) {
+                                    const player = createBot(`bot ${i}`);
+                                    if (player === undefined) return;
+                                    teleportPlayer(player, Vec(256, 24 + 6 * i));
+                                    const gun = Guns.definitions[i];
+
+                                    player.inventory.addOrReplaceWeapon(0, gun.idString);
+                                    (player.inventory.getWeapon(0) as GunItem).ammo = gun.capacity;
+                                    player.inventory.items.setItem(gun.ammoType, Infinity);
+                                    player.disableInvulnerability();
+                                    // map.game.addLoot(gun.idString, Vec(16, 32 + 16 * i), 0);
+                                    // map.game.addLoot(gun.ammoType, Vec(16, 32 + 16 * i), 0, { count: Infinity });
+                                }
+                            });
                         }
                     }
                 );

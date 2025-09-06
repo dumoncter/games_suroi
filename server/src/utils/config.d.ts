@@ -139,31 +139,6 @@ export interface ConfigSchema {
    */
   maxGames: number;
   /**
-   * Bot configuration for automated players.
-   */
-  bots?: {
-    /**
-     * Whether bots are enabled.
-     */
-    enabled?: boolean;
-    /**
-     * Number of bots to spawn.
-     */
-    count?: number;
-    /**
-     * Difficulty level of bots.
-     */
-    difficulty?: "easy" | "medium" | "hard" | "expert";
-    /**
-     * Behavior pattern of bots.
-     */
-    behavior?: "aggressive" | "defensive" | "strategic" | "survival";
-    /**
-     * List of bot names to use.
-     */
-    names?: string[];
-  };
-  /**
    * The number of game ticks that occur per second. Overrides the value of GameConstants.tps.
    */
   tps?: number;

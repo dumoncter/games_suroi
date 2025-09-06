@@ -167,7 +167,6 @@
             "type": "number",
             "minimum": 1
         },
-        // Bots removed from server configuration - now handled by separate AI client
         "tps": {
             "description": "The number of game ticks that occur per second. Overrides the value of GameConstants.tps.",
             "type": "number",
