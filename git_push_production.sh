@@ -1,11 +1,13 @@
 #!/bin/bash
 # Автоматический скрипт для коммита и пуша в ветку production
+# Работает ТОЛЬКО с веткой production
 # Использование: ./git_push_production.sh [сообщение коммита]
 
 # Цвета для вывода
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}🚀 Suroi Production Deploy Script${NC}"
@@ -23,10 +25,11 @@ fi
 CURRENT_BRANCH=$(git branch --show-current)
 echo -e "${YELLOW}📍 Текущая ветка: ${CURRENT_BRANCH}${NC}"
 
-if [ "$CURRENT_BRANCH" != "dev" ]; then
-    echo -e "${YELLOW}⚠️  Вы не в ветке dev. Переключаемся...${NC}"
-    git checkout dev || {
-        echo -e "${RED}❌ Ошибка при переключении на ветку dev${NC}"
+if [ "$CURRENT_BRANCH" != "production" ]; then
+    echo -e "${YELLOW}⚠️  Вы не в ветке production. Переключаемся...${NC}"
+    git checkout production || {
+        echo -e "${RED}❌ Ошибка при переключении на ветку production${NC}"
+        echo -e "${YELLOW}💡 Попробуйте создать ветку: git checkout -b production${NC}"
         exit 1
     }
 fi
@@ -67,7 +70,7 @@ fi
 
 # Пушим в production ветку
 echo "⬆️  Пушим изменения в ветку production..."
-if git push origin dev:production; then
+if git push origin production; then
     echo -e "${GREEN}✅ Успешно запушено в production ветку${NC}"
     echo -e "${GREEN}🔗 Production ветка обновлена!${NC}"
 else
@@ -76,6 +79,7 @@ else
     echo "   • Проверьте подключение к интернету"
     echo "   • Убедитесь что у вас есть права на push"
     echo "   • Попробуйте: git pull origin production --rebase"
+    echo "   • Или создайте upstream: git push -u origin production"
     exit 1
 fi
 
@@ -85,20 +89,23 @@ echo ""
 echo -e "${BLUE}🔄 Railway автоматически:${NC}"
 echo -e "${BLUE}   📦 Соберет Docker образ из production ветки${NC}"
 echo -e "${BLUE}   🏗️  Перекомпилирует TypeScript${NC}"
-echo -e "${BLUE}   🌐 Запустит nginx + Node.js сервер${NC}"
-echo -e "${BLUE}   🔌 Настроит WebSocket прокси${NC}"
+echo -e "${BLUE}   🌐 Запустит nginx + два Node.js сервера (solo + team)${NC}"
+echo -e "${BLUE}   🔌 Настроит WebSocket прокси для портов 8082/8083${NC}"
 echo -e "${BLUE}   ⚡ Применит оптимизации производительности${NC}"
 echo ""
 echo -e "${YELLOW}⏱️  Ожидайте 2-5 минут для завершения сборки${NC}"
 echo ""
 echo -e "${GREEN}🌐 Production URL: https://suroi.neonpsh.games${NC}"
 echo ""
-echo -e "${BLUE}🎮 Новые возможности оптимизации:${NC}"
-echo -e "${BLUE}   📊 Тестирование производительности: ./scripts/performance-test.js${NC}"
-echo -e "${BLUE}   🎯 Настройки камеры в игре (F1 console):${NC}"
-echo -e "${BLUE}      cv_camera_interpolation_speed - скорость сглаживания${NC}"
-echo -e "${BLUE}      cv_movement_smoothing - включить сглаживание${NC}"
-echo -e "${BLUE}   📱 Гироскоп настройки:${NC}"
-echo -e "${BLUE}      cv_gyroscope_sensitivity - чувствительность${NC}"
-echo -e "${BLUE}      cv_gyroscope_smoothing - сглаживание${NC}"
+echo -e "${BLUE}🎮 Доступные режимы игры:${NC}"
+echo -e "${BLUE}   👤 Solo Battles - одиночные бои${NC}"
+echo -e "${BLUE}   👥 Team Battles - командные бои (duo/squad ротация)${NC}"
+echo -e "${BLUE}   🌐 Production URL: https://suroi.neonpsh.games${NC}"
+echo ""
+echo -e "${BLUE}🎯 Настройки камеры в игре (F1 console):${NC}"
+echo -e "${BLUE}   cv_camera_interpolation_speed - скорость сглаживания${NC}"
+echo -e "${BLUE}   cv_movement_smoothing - включить сглаживание${NC}"
+echo -e "${BLUE}📱 Гироскоп настройки:${NC}"
+echo -e "${BLUE}   cv_gyroscope_sensitivity - чувствительность${NC}"
+echo -e "${BLUE}   cv_gyroscope_smoothing - сглаживание${NC}"
 echo ""
