@@ -6,8 +6,8 @@ export const Config = {
         production: {
             name: "NeonPSH",
             flag: "🚀",
-            mainAddress: "https://suroi.neonpsh.games",
-            gameAddress: "wss://suroi.neonpsh.games",
+            mainAddress: "https://gamessuroi-production.up.railway.app",
+            gameAddress: "wss://gamessuroi-production.up.railway.app",
             offset: 0
         },
         dev: {

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Автоматический скрипт для коммита и пуша в ветку dev
+# Автоматический скрипт для коммита и пуша в ветку production
 # Использование: ./git_push_production.sh [сообщение коммита]
 
 # Цвета для вывода
@@ -65,17 +65,17 @@ else
     exit 1
 fi
 
-# Пушим в dev ветку
-echo "⬆️  Пушим изменения в ветку dev..."
-if git push origin dev; then
-    echo -e "${GREEN}✅ Успешно запушено в dev ветку${NC}"
-    echo -e "${GREEN}🔗 Dev ветка обновлена!${NC}"
+# Пушим в production ветку
+echo "⬆️  Пушим изменения в ветку production..."
+if git push origin dev:production; then
+    echo -e "${GREEN}✅ Успешно запушено в production ветку${NC}"
+    echo -e "${GREEN}🔗 Production ветка обновлена!${NC}"
 else
-    echo -e "${RED}❌ Ошибка при пуше в dev ветку${NC}"
+    echo -e "${RED}❌ Ошибка при пуше в production ветку${NC}"
     echo -e "${YELLOW}💡 Возможные решения:${NC}"
     echo "   • Проверьте подключение к интернету"
     echo "   • Убедитесь что у вас есть права на push"
-    echo "   • Попробуйте: git pull origin dev --rebase"
+    echo "   • Попробуйте: git pull origin production --rebase"
     exit 1
 fi
 
@@ -83,7 +83,7 @@ echo ""
 echo -e "${GREEN}🎉 Деплой завершен успешно!${NC}"
 echo ""
 echo -e "${BLUE}🔄 Railway автоматически:${NC}"
-echo -e "${BLUE}   📦 Соберет Docker образ из dev ветки${NC}"
+echo -e "${BLUE}   📦 Соберет Docker образ из production ветки${NC}"
 echo -e "${BLUE}   🏗️  Перекомпилирует TypeScript${NC}"
 echo -e "${BLUE}   🌐 Запустит nginx + Node.js сервер${NC}"
 echo -e "${BLUE}   🔌 Настроит WebSocket прокси${NC}"
