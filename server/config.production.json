@@ -8,11 +8,11 @@
     "maxPlayersPerGame": 80,
     "maxGames": 5,
     "bots": {
-        "enabled": true,
-        "count": 10,
+        "enabled": false,
+        "count": 0,
         "difficulty": "medium",
         "behavior": "strategic",
-        "names": ["Bot_Alpha", "Bot_Beta", "Bot_Gamma", "Bot_Delta", "Bot_Epsilon", "Bot_Zeta", "Bot_Eta", "Bot_Theta", "Bot_Iota", "Bot_Kappa"]
+        "names": ["Bot_Alpha", "Bot_Beta"]
     },
     "roles": {
         "developr": { "password": "developr", "isDev": true },
