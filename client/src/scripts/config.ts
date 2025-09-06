@@ -9,24 +9,6 @@ export const Config = {
             mainAddress: "https://gamessuroi-production.up.railway.app",
             gameAddress: "wss://gamessuroi-production.up.railway.app",
             offset: 0
-        },
-        dev: {
-            name: "Local Server (Dev)",
-            mainAddress: "http://127.0.0.1:8000",
-            gameAddress: "ws://127.0.0.1:<gameID>",
-            offset: 8001
-        },
-        production_fallback: {
-            name: "Production Fallback (HTTP)",
-            mainAddress: "https://gamessuroi-production.up.railway.app",
-            gameAddress: "https://gamessuroi-production.up.railway.app/game/<gameID>",
-            offset: 1
-        },
-        production_tcp: {
-            name: "Railway Direct",
-            mainAddress: "https://gamessuroi-production.up.railway.app",
-            gameAddress: "wss://gamessuroi-production.up.railway.app",
-            offset: 8001
         }/* ,
         na: {
             name: "North America",
