@@ -9,6 +9,7 @@
 ```
 server_solo/          # Этот репозиторий (ветка server-solo)
 ├── server/           # Серверный код (копия из основного репозитория)
+├── common/           # Общие модули (для компиляции)
 ├── scripts/          # Скрипты запуска
 ├── railway.toml      # Конфигурация Railway
 ├── Dockerfile        # Docker образ
