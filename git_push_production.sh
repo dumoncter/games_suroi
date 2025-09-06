@@ -35,7 +35,7 @@ fi
 if [ -z "$(git status --porcelain)" ]; then
     echo -e "${YELLOW}⚠️  Нет изменений для коммита${NC}"
     echo -e "${GREEN}✅ Репозиторий уже актуален${NC}"
-    echo -e "${BLUE}🌐 Railway URL: https://gamessuroi-production.up.railway.app${NC}"
+    echo -e "${BLUE}🌐 Production URL: https://suroi.neonpsh.games${NC}"
     exit 0
 fi
 
@@ -91,7 +91,7 @@ echo -e "${BLUE}   ⚡ Применит оптимизации производ�
 echo ""
 echo -e "${YELLOW}⏱️  Ожидайте 2-5 минут для завершения сборки${NC}"
 echo ""
-echo -e "${GREEN}🌐 Production URL: https://gamessuroi-production.up.railway.app${NC}"
+echo -e "${GREEN}🌐 Production URL: https://suroi.neonpsh.games${NC}"
 echo ""
 echo -e "${BLUE}🎮 Новые возможности оптимизации:${NC}"
 echo -e "${BLUE}   📊 Тестирование производительности: ./scripts/performance-test.js${NC}"
