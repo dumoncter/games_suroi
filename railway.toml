@@ -1,0 +1,19 @@
+# Suroi Solo Server
+[services.suroi-solo]
+source = "."
+buildCommand = "pnpm build"
+
+[services.suroi-solo.env]
+NODE_ENV = "production"
+SERVER_TYPE = "solo"
+PORT = "8082"
+
+[services.suroi-solo.build]
+builder = "dockerfile"
+
+[services.suroi-solo.deploy]
+startCommand = "node scripts/start-production.js"
+healthcheckPath = "/api/serverInfo"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
