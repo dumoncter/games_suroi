@@ -37,21 +37,21 @@ class CameraManagerClass {
 
     // Интерполяция позиции камеры для плавности
     private _targetPosition = Vec(0, 0);
-    private _interpolationSpeed = 0.25; // Увеличенная скорость интерполяции для устранения дергания
+    private _interpolationSpeed = 0.12; // Уменьшенная скорость интерполяции для плавности
 
     // Установка целевой позиции камеры с интерполяцией
     setTargetPosition(target: Vector): void {
         // Более плавная интерполяция для устранения дергания
-        const distance = Vec.distance(this._targetPosition, target);
+        const distance = Vec.length(Vec.sub(this._targetPosition, target));
 
         // Если расстояние большое - используем быструю интерполяцию
         // Если расстояние маленькое - используем медленную для плавности
         if (distance > 50) {
-            this._interpolationSpeed = 0.4; // Быстрая интерполяция для больших перемещений
+            this._interpolationSpeed = 0.25; // Быстрая интерполяция для больших перемещений
         } else if (distance > 10) {
-            this._interpolationSpeed = 0.25; // Средняя интерполяция
+            this._interpolationSpeed = 0.15; // Средняя интерполяция
         } else {
-            this._interpolationSpeed = 0.15; // Медленная интерполяция для плавности
+            this._interpolationSpeed = 0.08; // Медленная интерполяция для плавности
         }
 
         this._targetPosition = Vec.clone(target);
