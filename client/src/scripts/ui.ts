@@ -177,6 +177,11 @@ export async function fetchServerData(): Promise<void> {
 
         if (!info) {
             console.error(`Unable to load server info for region ${regionID} after 3 attempts`);
+            // If dev region is unavailable and it's currently selected, switch to production
+            if (regionID === "dev" && selectedRegionID === "dev") {
+                console.log("Dev server unavailable, switching to production region");
+                GameConsole.setBuiltInCVar("cv_region", "production");
+            }
             return;
         }
 
