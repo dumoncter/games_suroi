@@ -26,14 +26,8 @@ WORKDIR /app
 # Copy package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# Copy client package
-COPY client/package.json ./client/
-
 # Copy server package
 COPY server/package.json ./server/
-
-# Copy common package
-COPY common/package.json ./common/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
@@ -44,10 +38,7 @@ FROM base AS build
 # Copy source code
 COPY . .
 
-# Build client
-RUN cd client && pnpm build
-
-# Build server
+# Build server only
 RUN cd server && pnpm build
 
 # Production stage
@@ -77,22 +68,13 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY client/package.json ./client/
 COPY server/package.json ./server/
-COPY common/package.json ./common/
 
 # Install production dependencies only
 RUN pnpm install --frozen-lockfile --prod || pnpm install --no-frozen-lockfile --prod
 
-# Copy built client
-COPY --from=build /app/client/dist ./client/dist
-
 # Copy built server
 COPY --from=build /app/server/dist ./server/dist
-
-# Copy common source (needed for runtime)
-COPY common/src ./common/src
-COPY common/package.json ./common/
 
 # Copy server configs
 COPY server/config.production.json ./server/config.production.json
