@@ -1,0 +1,19 @@
+# Suroi Team Server
+[services.suroi-team]
+source = "."
+buildCommand = "pnpm build"
+
+[services.suroi-team.env]
+NODE_ENV = "production"
+SERVER_TYPE = "team"
+PORT = "8083"
+
+[services.suroi-team.build]
+builder = "dockerfile"
+
+[services.suroi-team.deploy]
+startCommand = "node scripts/start-production.js"
+healthcheckPath = "/api/serverInfo"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
