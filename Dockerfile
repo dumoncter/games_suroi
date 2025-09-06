@@ -121,12 +121,12 @@ RUN mkdir -p /var/cache/nginx /var/log/nginx /run /var/lib/nginx/body /var/lib/n
     chown nodejs:nodejs /run/nginx.pid
 USER 1001
 
-# Expose ports (will be overridden by Railway based on service configuration)
-EXPOSE 8000 8082 8083 3000
+# Expose ports for both servers
+EXPOSE 8082 8083 3000
 
-# Health check (will use PORT environment variable set by Railway)
+# Health check - check solo server API (Railway will use /api/serverInfo)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
+  CMD curl -f http://localhost:8082/api/serverInfo || exit 1
 
 # Start the application
 CMD ["pnpm", "start"]

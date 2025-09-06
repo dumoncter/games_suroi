@@ -6,12 +6,7 @@ const path = require('path');
 // Set production config
 process.env.NODE_ENV = 'production';
 
-// Determine server type from environment variable
-const serverType = process.env.SERVER_TYPE || 'production';
-const configFile = `config.${serverType}.json`;
-const port = process.env.PORT || (serverType === 'solo' ? 8082 : serverType === 'team' ? 8083 : 8000);
-
-console.log(`🚀 Starting ${serverType} server on port ${port}...`);
+console.log('🚀 Starting Suroi servers...');
 
 // Start nginx first
 console.log('🚀 Starting nginx...');
@@ -25,37 +20,59 @@ nginxProcess.on('error', (error) => {
     process.exit(1);
 });
 
-// Wait a bit for nginx to start
+// Wait for nginx to start
 setTimeout(() => {
     console.log('✅ Nginx started successfully');
 
-    // Start server
-    console.log(`🚀 Starting ${serverType} server...`);
-    const serverProcess = spawn('pnpm', ['start:server'], {
+    // Start solo server
+    console.log('🚀 Starting solo server on port 8082...');
+    const soloProcess = spawn('pnpm', ['start:server'], {
         cwd: path.join(__dirname, '..'),
         stdio: 'inherit',
         env: {
             ...process.env,
-            CONFIG_FILE: configFile,
-            PORT: port.toString()
+            CONFIG_FILE: 'config.solo.json',
+            PORT: '8082'
         }
     });
 
-    serverProcess.on('error', (error) => {
-        console.error('Failed to start server:', error);
+    // Start team server
+    console.log('🚀 Starting team server on port 8083...');
+    const teamProcess = spawn('pnpm', ['start:server'], {
+        cwd: path.join(__dirname, '..'),
+        stdio: 'inherit',
+        env: {
+            ...process.env,
+            CONFIG_FILE: 'config.team.json',
+            PORT: '8083'
+        }
+    });
+
+    soloProcess.on('error', (error) => {
+        console.error('Failed to start solo server:', error);
         nginxProcess.kill();
+        teamProcess.kill();
+        process.exit(1);
+    });
+
+    teamProcess.on('error', (error) => {
+        console.error('Failed to start team server:', error);
+        nginxProcess.kill();
+        soloProcess.kill();
         process.exit(1);
     });
 
     // Services are ready
     console.log('✅ All services started successfully');
-    console.log(`🌐 API/WebSocket: available on localhost:${port}`);
-    console.log(`🎮 ${serverType.charAt(0).toUpperCase() + serverType.slice(1)} server ready for Railway proxy!`);
+    console.log('🌐 Solo server: localhost:8082');
+    console.log('🌐 Team server: localhost:8083');
+    console.log('🎮 Both servers ready for Railway proxy!');
 
     // Handle process termination
     const shutdown = () => {
         console.log('🛑 Shutting down services...');
-        serverProcess.kill('SIGINT');
+        soloProcess.kill('SIGINT');
+        teamProcess.kill('SIGINT');
         nginxProcess.kill('SIGINT');
         setTimeout(() => process.exit(0), 1000);
     };
@@ -63,4 +80,4 @@ setTimeout(() => {
     process.on('SIGINT', shutdown);
     process.on('SIGTERM', shutdown);
 
-}, 2000);
+}, 3000);
