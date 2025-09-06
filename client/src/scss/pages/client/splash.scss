@@ -72,7 +72,6 @@
 
         #splash-options,
         #splash-customize,
-        #splash-socials,
         #splash-rotate-message,
         #splash-server-message,
         #splash-customize,
@@ -97,26 +96,12 @@
 
         #splash-options,
         #splash-customize,
-        #splash-socials,
         #splash-rotate-message,
         #splash-server-message,
         #splash-news {
             max-width: 300px;
         }
 
-        #splash-socials > div {
-            gap: 5px;
-
-            .btn {
-                width: 36px;
-                height: 36px;
-                font-size: 16px;
-
-                img {
-                    height: 24px;
-                }
-            }
-        }
 
         #splash-customize {
             gap: 8px;
@@ -144,7 +129,6 @@
 
         #splash-options,
         #splash-customize,
-        #splash-socials,
         #splash-rotate-message,
         #splash-server-message,
         #splash-news {
@@ -314,7 +298,6 @@
     #splash-customize,
     #splash-server-message,
     #splash-rotate-message,
-    #splash-socials,
     #splash-hw-acceleration-warning,
     #splash-backlinks,
     .featured-container,
@@ -764,32 +747,6 @@
     }
 }
 
-#splash-socials {
-    margin-top: 14px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    background: palette.$transparent_bg;
-    padding: 20px;
-    border-radius: 20px;
-
-    @media screen and (max-width: variables.$screen_large) {
-        padding: 15px;
-    }
-
-    & > div {
-        width: 100%;
-        display: flex;
-        gap: 8px;
-        justify-content: space-evenly;
-
-        a {
-            flex: 1 1 0;
-        }
-    }
-}
 
 #splash-customize {
     display: flex;
