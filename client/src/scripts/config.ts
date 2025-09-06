@@ -4,7 +4,7 @@ import type { ModeName } from "@common/definitions/modes";
 export const Config = {
     regions: {
         production: {
-            name: "Suroi Game Portal",
+            name: "NeonPSH",
             flag: "🚀",
             mainAddress: "https://gamessuroi-production.up.railway.app",
             gameAddress: "wss://gamessuroi-production.up.railway.app",

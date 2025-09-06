@@ -155,7 +155,23 @@ export async function fetchServerData(): Promise<void> {
     }
 
     ui.loaderText.text(getTranslatedString("loading_fetching_data"));
-    const selectedRegionID = GameConsole.getBuiltInCVar("cv_region");
+    let selectedRegionID = GameConsole.getBuiltInCVar("cv_region");
+
+    // If cv_region is not set or empty, use production for Railway
+    if (!selectedRegionID || selectedRegionID === "") {
+        if (!window.location.hostname.includes("127.0.0.1") && !window.location.hostname.includes("localhost")) {
+            selectedRegionID = "production";
+            GameConsole.setBuiltInCVar("cv_region", "production");
+        }
+    }
+
+    // If cv_region is set to dev but we're not on localhost, switch to production
+    if (selectedRegionID === "dev" && !window.location.hostname.includes("127.0.0.1") && !window.location.hostname.includes("localhost")) {
+        console.log("Dev region selected but not on localhost, switching to production");
+        selectedRegionID = "production";
+        GameConsole.setBuiltInCVar("cv_region", "production");
+    }
+
     const regionPromises = Object.entries(regionMap).map(async([_, [regionID, region]]) => {
         const listItem = regionUICache[regionID];
 
