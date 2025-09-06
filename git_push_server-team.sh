@@ -34,6 +34,30 @@ if [ "$CURRENT_BRANCH" != "server-team" ]; then
     }
 fi
 
+# Синхронизация с основным репозиторием
+echo -e "${BLUE}🔄 Синхронизация с основным репозиторием...${NC}"
+BASE_DIR="/var/www/neonpsh.ru/games_portal/suroi"
+
+# Сохраняем специфические файлы сервера
+echo "💾 Сохраняем специфические файлы сервера..."
+cp railway.toml railway.toml.backup 2>/dev/null || true
+cp nginx.conf nginx.conf.backup 2>/dev/null || true
+cp Dockerfile Dockerfile.backup 2>/dev/null || true
+cp git_push_server-team.sh git_push_server-team.sh.backup 2>/dev/null || true
+
+# Копируем обновления серверного кода
+echo "📋 Копируем обновления серверного кода..."
+cp -r "$BASE_DIR/server"/* ./server/ 2>/dev/null || true
+
+# Восстанавливаем специфические файлы
+echo "🔄 Восстанавливаем специфические файлы..."
+mv railway.toml.backup railway.toml 2>/dev/null || true
+mv nginx.conf.backup nginx.conf 2>/dev/null || true
+mv Dockerfile.backup Dockerfile 2>/dev/null || true
+mv git_push_server-team.sh.backup git_push_server-team.sh 2>/dev/null || true
+
+echo -e "${GREEN}✅ Синхронизация завершена${NC}"
+
 # Проверяем, есть ли изменения для коммита
 if [ -z "$(git status --porcelain)" ]; then
     echo -e "${YELLOW}⚠️  Нет изменений для коммита${NC}"
