@@ -42,7 +42,7 @@ class CameraManagerClass {
     // Установка целевой позиции камеры с интерполяцией
     setTargetPosition(target: Vector): void {
         // Более плавная интерполяция для устранения дергания
-        const distance = Vec.length(Vec.sub(this._targetPosition, target));
+        const distance = Vec.len(Vec.sub(this._targetPosition, target));
 
         // Если расстояние большое - используем быструю интерполяцию
         // Если расстояние маленькое - используем медленную для плавности
