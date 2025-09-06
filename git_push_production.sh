@@ -102,5 +102,3 @@ echo -e "${BLUE}   📱 Гироскоп настройки:${NC}"
 echo -e "${BLUE}      cv_gyroscope_sensitivity - чувствительность${NC}"
 echo -e "${BLUE}      cv_gyroscope_smoothing - сглаживание${NC}"
 echo ""
-echo "📊 Последний коммит:"
-git log --oneline -1
