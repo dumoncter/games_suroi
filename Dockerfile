@@ -124,9 +124,9 @@ USER 1001
 # Expose ports for both servers
 EXPOSE 8082 8083 3000
 
-# Health check - check solo server API (Railway will use /api/serverInfo)
+# Health check - check solo server API (Railway provides PORT)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8082/api/serverInfo || exit 1
+  CMD curl -f http://localhost:${PORT:-8082}/api/serverInfo || exit 1
 
 # Start the application
-CMD ["pnpm", "start"]
+CMD ["node", "scripts/start-production.js"]

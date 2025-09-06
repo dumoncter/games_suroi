@@ -72,6 +72,10 @@ if (Cluster.isPrimary && require.main === module) {
 
     const app = App();
 
+    app.get("/health", (res, req) => {
+        res.writeHeader("Content-Type", "text/plain").end("OK");
+    });
+
     app.get("/api/serverInfo", async(res, req) => {
         let aborted = false;
         res.onAborted(() => aborted = true);

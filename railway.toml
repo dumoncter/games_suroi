@@ -5,12 +5,13 @@ buildCommand = "pnpm build"
 
 [services.suroi.env]
 NODE_ENV = "production"
+# Railway автоматически предоставит PORT
 
 [services.suroi.build]
 builder = "dockerfile"
 
 [services.suroi.deploy]
-startCommand = "pnpm start"
+startCommand = "node scripts/start-production.js"
 healthcheckPath = "/api/serverInfo"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
