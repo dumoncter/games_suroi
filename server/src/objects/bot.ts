@@ -28,6 +28,23 @@ export enum BotBehavior {
     SURVIVAL = "survival"
 }
 
+export enum BotState {
+    EXPLORING = "exploring",
+    HUNTING = "hunting",
+    LOOTING = "looting",
+    FLEEING = "fleeing",
+    UPGRADING = "upgrading",
+    INTERACTING = "interacting"
+}
+
+export enum ItemPriority {
+    CRITICAL = 5,  // Лучшее оружие, полное хил
+    HIGH = 4,      // Хорошее оружие, броня
+    MEDIUM = 3,    // Среднее оружие, аптечки
+    LOW = 2,       // Простое оружие, патроны
+    USELESS = 1    // Хлам
+}
+
 export interface BotConfig {
     readonly difficulty: BotDifficulty;
     readonly behavior: BotBehavior;
@@ -39,13 +56,29 @@ export class Bot extends Player {
     readonly isBot = true;
     private readonly config: BotConfig;
 
-    // AI State
+    // Advanced AI State
+    private currentState = BotState.EXPLORING;
     private currentTarget?: Player | Loot | Obstacle;
     private lastActionTime = 0;
-    private actionCooldown = 100; // ms between actions
-    private path: Vector[] = [];
-    private currentPathIndex = 0;
+    private actionCooldown = 50; // ms between actions (faster decisions)
+
+    // Navigation
     private currentPath: Vector[] = [];
+    private currentPathIndex = 0;
+    private lastPosition: Vector = Vec(0, 0);
+    private stuckTime = 0;
+
+    // Memory System
+    private knownLootLocations: Map<string, { position: Vector, item: Loot, priority: ItemPriority, lastSeen: number }> = new Map();
+    private knownEnemyLocations: Map<string, { position: Vector, player: Player, lastSeen: number }> = new Map();
+    private exploredAreas: Set<string> = new Set();
+    private dangerZones: Map<string, number> = new Map(); // position -> danger level
+
+    // Goals and Priorities
+    private currentGoal?: { type: 'loot' | 'enemy' | 'safe_zone' | 'explore', target?: any, priority: number };
+    private inventoryNeeds: { weapons: boolean, ammo: boolean, healing: boolean, armor: boolean } = {
+        weapons: true, ammo: true, healing: true, armor: true
+    };
 
     // Bot stats based on difficulty
     private readonly reactionTime: number;
@@ -145,6 +178,8 @@ export class Bot extends Player {
     private updateAI(): void {
         if (this.dead) return;
 
+        const now = this.game.now;
+
         // Clear old inputs
         this.movement.up = false;
         this.movement.down = false;
@@ -152,31 +187,222 @@ export class Bot extends Player {
         this.movement.right = false;
         this.attacking = false;
 
+        // Update memory and surroundings
+        this.updateMemory();
+        this.checkStuck();
+
         // Gas avoidance has highest priority
         if (this.shouldAvoidGas()) {
+            this.currentState = BotState.FLEEING;
             this.avoidGas();
             return;
         }
 
-        // Decide next action based on behavior
-        switch (this.config.behavior) {
-            case BotBehavior.AGGRESSIVE:
-                this.aggressiveBehavior();
+        // Evaluate situation and set goals
+        this.evaluateSituation();
+
+        // Execute current goal based on state
+        switch (this.currentState) {
+            case BotState.EXPLORING:
+                this.executeExploration();
                 break;
-            case BotBehavior.DEFENSIVE:
-                this.defensiveBehavior();
+            case BotState.LOOTING:
+                this.executeLooting();
                 break;
-            case BotBehavior.STRATEGIC:
-                this.strategicBehavior();
+            case BotState.HUNTING:
+                this.executeHunting();
                 break;
-            case BotBehavior.SURVIVAL:
-                this.survivalBehavior();
+            case BotState.FLEEING:
+                this.executeFleeing();
+                break;
+            case BotState.UPGRADING:
+                this.executeUpgrading();
+                break;
+            case BotState.INTERACTING:
+                this.executeInteracting();
                 break;
         }
+
+        // Update explored areas
+        this.updateExploredAreas();
     }
 
     private shouldAvoidGas(): boolean {
         return this.game.gas.isInGas(this.position);
+    }
+
+    private updateMemory(): void {
+        const now = this.game.now;
+
+        // Update known loot locations
+        for (const loot of this.game.grid.pool.getCategory(ObjectCategory.Loot)) {
+            if (loot.dead) continue;
+
+            const key = `${Math.floor(loot.position.x / 10)}_${Math.floor(loot.position.y / 10)}`;
+            const priority = this.evaluateItemPriority(loot);
+
+            if (priority >= ItemPriority.LOW) {
+                this.knownLootLocations.set(key, {
+                    position: Vec.clone(loot.position),
+                    item: loot,
+                    priority,
+                    lastSeen: now
+                });
+            }
+        }
+
+        // Update known enemy locations
+        for (const player of this.game.livingPlayers) {
+            if (player === this || player.dead) continue;
+
+            const key = `enemy_${player.id}`;
+            this.knownEnemyLocations.set(key, {
+                position: Vec.clone(player.position),
+                player,
+                lastSeen: now
+            });
+        }
+
+        // Clean old memory (older than 30 seconds)
+        for (const [key, data] of this.knownLootLocations) {
+            if (now - data.lastSeen > 30000) {
+                this.knownLootLocations.delete(key);
+            }
+        }
+
+        for (const [key, data] of this.knownEnemyLocations) {
+            if (now - data.lastSeen > 30000) {
+                this.knownEnemyLocations.delete(key);
+            }
+        }
+    }
+
+    private evaluateItemPriority(item: Loot): ItemPriority {
+        const itemId = item.definition.idString;
+
+        // Weapons
+        if (itemId.includes("ak47") || itemId.includes("scar") || itemId.includes("m4a1")) {
+            return ItemPriority.CRITICAL;
+        }
+        if (itemId.includes("mp5") || itemId.includes("ump") || itemId.includes("vector")) {
+            return ItemPriority.HIGH;
+        }
+        if (itemId.includes("ak47") || itemId.includes("mosin") || itemId.includes("m870")) {
+            return ItemPriority.MEDIUM;
+        }
+        if (itemId.includes("glock") || itemId.includes("m9") || itemId.includes("mosin")) {
+            return ItemPriority.LOW;
+        }
+
+        // Healing
+        if (itemId.includes("cola") || itemId.includes("meds")) {
+            return ItemPriority.HIGH;
+        }
+        if (itemId.includes("soda") || itemId.includes("painkillers")) {
+            return ItemPriority.MEDIUM;
+        }
+
+        // Armor
+        if (itemId.includes("helmet") || itemId.includes("vest")) {
+            return ItemPriority.HIGH;
+        }
+
+        // Ammo
+        if (itemId.includes("ammo")) {
+            return this.needsAmmo() ? ItemPriority.MEDIUM : ItemPriority.LOW;
+        }
+
+        return ItemPriority.USELESS;
+    }
+
+    private evaluateSituation(): void {
+        const healthRatio = this.health / this.maxHealth;
+        const hasGoodWeapon = this.hasGoodWeapon();
+        const needsAmmo = this.needsAmmo();
+
+        // Emergency situations
+        if (healthRatio < 0.2) {
+            this.currentState = BotState.FLEEING;
+            this.currentGoal = { type: 'safe_zone', priority: 10 };
+            return;
+        }
+
+        // Critical needs
+        if (!hasGoodWeapon) {
+            this.currentState = BotState.LOOTING;
+            this.currentGoal = { type: 'loot', priority: 9 };
+            return;
+        }
+
+        if (needsAmmo) {
+            this.currentState = BotState.LOOTING;
+            this.currentGoal = { type: 'loot', priority: 8 };
+            return;
+        }
+
+        // Combat opportunities
+        const nearestEnemy = this.findNearestEnemy();
+        if (nearestEnemy && this.shouldEngageTarget(nearestEnemy) && hasGoodWeapon) {
+            this.currentState = BotState.HUNTING;
+            this.currentGoal = { type: 'enemy', target: nearestEnemy, priority: 7 };
+            return;
+        }
+
+        // Resource gathering
+        const bestLoot = this.findBestLoot();
+        if (bestLoot && bestLoot.priority >= ItemPriority.MEDIUM) {
+            this.currentState = BotState.LOOTING;
+            this.currentGoal = { type: 'loot', target: bestLoot.item, priority: 6 };
+            return;
+        }
+
+        // Exploration
+        this.currentState = BotState.EXPLORING;
+        this.currentGoal = { type: 'explore', priority: 1 };
+    }
+
+    private findBestLoot(): { item: Loot, priority: ItemPriority } | undefined {
+        let bestLoot: Loot | undefined;
+        let bestPriority = ItemPriority.USELESS;
+
+        for (const [, data] of this.knownLootLocations) {
+            if (data.priority > bestPriority) {
+                bestLoot = data.item;
+                bestPriority = data.priority;
+            }
+        }
+
+        return bestLoot ? { item: bestLoot, priority: bestPriority } : undefined;
+    }
+
+    private checkStuck(): void {
+        const distance = Geometry.distance(this.position, this.lastPosition);
+
+        if (distance < 1) {
+            this.stuckTime += this.game.dt;
+            if (this.stuckTime > 2000) { // Stuck for 2 seconds
+                this.handleStuck();
+                this.stuckTime = 0;
+            }
+        } else {
+            this.stuckTime = 0;
+        }
+
+        this.lastPosition = Vec.clone(this.position);
+    }
+
+    private handleStuck(): void {
+        // Try to move in a different direction
+        this.currentPath = [];
+        this.currentPathIndex = 0;
+
+        // Add some randomness to movement
+        const randomAngle = Math.random() * Math.PI * 2;
+        const randomDistance = 20 + Math.random() * 30;
+        const newX = this.position.x + Math.cos(randomAngle) * randomDistance;
+        const newY = this.position.y + Math.sin(randomAngle) * randomDistance;
+
+        this.moveTowards(Vec(newX, newY));
     }
 
     private avoidGas(): void {
@@ -203,19 +429,6 @@ export class Bot extends Player {
         return undefined;
     }
 
-    private aggressiveBehavior(): void {
-        const nearestEnemy = this.findNearestEnemy();
-        if (nearestEnemy && this.canSeePlayer(nearestEnemy)) {
-            this.attackEnemy(nearestEnemy);
-        } else {
-            const nearestWeapon = this.findNearestWeapon();
-            if (nearestWeapon) {
-                this.moveTowards(nearestWeapon.position);
-            } else {
-                this.explore();
-            }
-        }
-    }
 
     private defensiveBehavior(): void {
         const nearestEnemy = this.findNearestEnemy();
@@ -267,7 +480,7 @@ export class Bot extends Player {
                 return;
             }
 
-            this.explore();
+            this.currentState = BotState.EXPLORING;
         }
     }
 
@@ -345,7 +558,7 @@ export class Bot extends Player {
         }
 
         // Explore if no immediate threats or opportunities
-        this.explore();
+        this.currentState = BotState.EXPLORING;
     }
 
     private survivalBehavior(): void {
@@ -395,7 +608,7 @@ export class Bot extends Player {
         }
 
         // Priority 7: Safe exploration
-        this.explore();
+        this.currentState = BotState.EXPLORING;
     }
 
     private findNearestEnemy(): Player | undefined {
@@ -576,26 +789,159 @@ export class Bot extends Player {
         this.movement.right = false;
     }
 
-    private explore(): void {
-        // Realistic movement like human players
-        if (this.currentPath.length === 0 || Math.random() < 0.05) { // 5% chance to choose new direction
-            this.generateNewPath();
+    // Execute different AI states
+    private executeExploration(): void {
+        // Look for unexplored areas
+        const unexploredArea = this.findUnexploredArea();
+        if (unexploredArea) {
+            this.moveTowards(unexploredArea);
+        } else {
+            // Random exploration
+            if (this.currentPath.length === 0 || Math.random() < 0.1) {
+                this.generateExplorationPath();
+            }
+            this.followPath();
         }
 
-        this.followPath();
+        // Check for nearby loot while exploring
+        const nearbyLoot = this.findNearbyLoot(50);
+        if (nearbyLoot && this.evaluateItemPriority(nearbyLoot) >= ItemPriority.MEDIUM) {
+            this.currentState = BotState.LOOTING;
+            this.currentTarget = nearbyLoot;
+        }
+
+        // Check for nearby enemies
+        const nearbyEnemy = this.findNearestEnemy();
+        if (nearbyEnemy && this.shouldEngageTarget(nearbyEnemy)) {
+            this.currentState = BotState.HUNTING;
+            this.currentTarget = nearbyEnemy;
+        }
     }
 
-    private generateNewPath(): void {
-        // Choose random direction and distance
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 50 + Math.random() * 100; // 50-150 units
+    private executeLooting(): void {
+        if (!this.currentTarget) {
+            this.currentState = BotState.EXPLORING;
+            return;
+        }
 
-        const targetX = this.position.x + Math.cos(angle) * distance;
-        const targetY = this.position.y + Math.sin(angle) * distance;
+        const target = this.currentTarget as Loot;
+        const distance = Geometry.distance(this.position, target.position);
 
-        // Create simple path (just direct line for now)
-        this.currentPath = [Vec(targetX, targetY)];
-        this.currentPathIndex = 0;
+        if (target.dead) {
+            // Loot was taken by someone else
+            this.currentState = BotState.EXPLORING;
+            return;
+        }
+
+        if (distance < 5) {
+            // Close enough to loot
+            this.stopMovement();
+            // Loot will be collected automatically by game mechanics
+            this.currentState = BotState.EXPLORING;
+        } else {
+            // Move towards loot
+            this.moveTowards(target.position);
+        }
+    }
+
+    private executeHunting(): void {
+        if (!this.currentTarget) {
+            this.currentState = BotState.EXPLORING;
+            return;
+        }
+
+        const target = this.currentTarget as Player;
+        if (target.dead) {
+            this.currentState = BotState.EXPLORING;
+            return;
+        }
+
+        this.attackEnemy(target);
+    }
+
+    private executeFleeing(): void {
+        const safePosition = this.findSafePosition();
+        if (safePosition) {
+            this.moveTowards(safePosition);
+        } else {
+            // Move away from danger
+            const dangerDirection = Vec.sub(this.position, this.game.gas.currentPosition);
+            const fleePosition = Vec.add(this.position, Vec.scale(Vec.normalize(dangerDirection), 100));
+            this.moveTowards(fleePosition);
+        }
+    }
+
+    private executeUpgrading(): void {
+        // Check if we need to upgrade equipment
+        this.evaluateEquipmentNeeds();
+        this.currentState = BotState.EXPLORING;
+    }
+
+    private executeInteracting(): void {
+        if (!this.currentTarget) {
+            this.currentState = BotState.EXPLORING;
+            return;
+        }
+
+        const target = this.currentTarget as Obstacle;
+        const distance = Geometry.distance(this.position, target.position);
+
+        if (distance < 5) {
+            this.stopMovement();
+            // Interaction will happen automatically
+            this.currentState = BotState.EXPLORING;
+        } else {
+            this.moveTowards(target.position);
+        }
+    }
+
+    private findUnexploredArea(): Vector | undefined {
+        // Simple exploration - look for areas we haven't visited
+        const searchRadius = 200;
+        const attempts = 10;
+
+        for (let i = 0; i < attempts; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 50 + Math.random() * searchRadius;
+            const testX = this.position.x + Math.cos(angle) * distance;
+            const testY = this.position.y + Math.sin(angle) * distance;
+
+            const areaKey = `${Math.floor(testX / 50)}_${Math.floor(testY / 50)}`;
+            if (!this.exploredAreas.has(areaKey)) {
+                return Vec(testX, testY);
+            }
+        }
+
+        return undefined;
+    }
+
+    private findNearbyLoot(radius: number): Loot | undefined {
+        for (const loot of this.game.grid.pool.getCategory(ObjectCategory.Loot)) {
+            if (loot.dead) continue;
+
+            const distance = Geometry.distance(this.position, loot.position);
+            if (distance <= radius) {
+                return loot;
+            }
+        }
+        return undefined;
+    }
+
+    private generateExplorationPath(): void {
+        const unexploredArea = this.findUnexploredArea();
+        if (unexploredArea) {
+            this.currentPath = [unexploredArea];
+            this.currentPathIndex = 0;
+        } else {
+            // Random path
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 50 + Math.random() * 100;
+            const targetX = this.position.x + Math.cos(angle) * distance;
+            const targetY = this.position.y + Math.sin(angle) * distance;
+
+            this.currentPath = [Vec(targetX, targetY)];
+            this.currentPathIndex = 0;
+        }
     }
 
     private followPath(): void {
@@ -616,6 +962,33 @@ export class Bot extends Player {
 
         // Move towards target
         this.moveTowards(target);
+    }
+
+    private evaluateEquipmentNeeds(): void {
+        // Check if we need better weapons
+        if (!this.hasGoodWeapon()) {
+            this.inventoryNeeds.weapons = true;
+        }
+
+        // Check if we need ammo
+        if (this.needsAmmo()) {
+            this.inventoryNeeds.ammo = true;
+        }
+
+        // Check if we need healing
+        const healthRatio = this.health / this.maxHealth;
+        if (healthRatio < 0.8) {
+            this.inventoryNeeds.healing = true;
+        }
+
+        // Check if we need armor
+        // This would require checking current armor level
+        this.inventoryNeeds.armor = false; // Simplified for now
+    }
+
+    private updateExploredAreas(): void {
+        const areaKey = `${Math.floor(this.position.x / 50)}_${Math.floor(this.position.y / 50)}`;
+        this.exploredAreas.add(areaKey);
     }
 
     private tryReload(): void {
