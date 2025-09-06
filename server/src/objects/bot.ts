@@ -218,12 +218,18 @@ export class Bot extends Player {
 
     private defensiveBehavior(): void {
         const nearestEnemy = this.findNearestEnemy();
+        const nearestWeapon = this.findNearestWeapon();
+        const nearestAmmo = this.findAmmo();
+        const needsAmmo = this.needsAmmo();
+
         if (nearestEnemy && Geometry.distance(this.position, nearestEnemy.position) < 50) {
             this.fleeFrom(nearestEnemy.position);
         } else {
-            const nearestWeapon = this.findNearestWeapon();
-            if (nearestWeapon) {
-                this.moveTowards(nearestWeapon.position);
+            // Look for ammo first if needed
+            if (nearestAmmo && needsAmmo) {
+                this.moveTowardsAndInteract(nearestAmmo);
+            } else if (nearestWeapon) {
+                this.moveTowardsAndInteract(nearestWeapon);
             } else {
                 this.explore();
             }
@@ -233,20 +239,62 @@ export class Bot extends Player {
     private strategicBehavior(): void {
         const nearestEnemy = this.findNearestEnemy();
         const nearestWeapon = this.findNearestWeapon();
+        const nearestAmmo = this.findAmmo();
 
-        if (nearestEnemy && this.canSeePlayer(nearestEnemy) && this.hasGoodWeapon()) {
-            this.attackEnemy(nearestEnemy);
-        } else if (nearestWeapon) {
-            this.moveTowards(nearestWeapon.position);
-        } else {
-            this.explore();
+        // Evaluate situation
+        const hasGoodWeapon = this.hasGoodWeapon();
+        const healthPercentage = this.health / this.maxHealth;
+
+        // Check if we need ammo
+        const needsAmmo = this.needsAmmo();
+
+        if (nearestEnemy && this.canSeePlayer(nearestEnemy)) {
+            const enemyDistance = Geometry.distance(this.position, nearestEnemy.position);
+
+            // Attack if we have advantage
+            if (hasGoodWeapon && enemyDistance < 100 && healthPercentage > 0.3 && !needsAmmo) {
+                this.attackEnemy(nearestEnemy);
+                return;
+            }
+
+            // Flee if we're weak or enemy is too close
+            if (healthPercentage < 0.3 || enemyDistance < 30) {
+                this.fleeFrom(nearestEnemy.position);
+                return;
+            }
         }
+
+        // Look for ammo first if we need it
+        if (nearestAmmo && needsAmmo) {
+            this.moveTowards(nearestAmmo.position);
+            return;
+        }
+
+        // Look for weapons if we don't have good ones
+        if (nearestWeapon && !hasGoodWeapon) {
+            this.moveTowardsAndInteract(nearestWeapon);
+            return;
+        }
+
+        // Look for ammo if we need it
+        if (nearestAmmo && needsAmmo) {
+            this.moveTowardsAndInteract(nearestAmmo);
+            return;
+        }
+
+        // Explore if no immediate threats or opportunities
+        this.explore();
     }
 
     private survivalBehavior(): void {
         const nearestWeapon = this.findNearestWeapon();
-        if (nearestWeapon) {
-            this.moveTowards(nearestWeapon.position);
+        const nearestAmmo = this.findAmmo();
+        const needsAmmo = this.needsAmmo();
+
+        if (nearestAmmo && needsAmmo) {
+            this.moveTowardsAndInteract(nearestAmmo);
+        } else if (nearestWeapon) {
+            this.moveTowardsAndInteract(nearestWeapon);
         } else {
             this.explore();
         }
@@ -329,17 +377,33 @@ export class Bot extends Player {
         const direction = Vec.sub(enemy.position, this.position);
         const distance = Geometry.distance(this.position, enemy.position);
 
+        // Face the enemy
+        this.faceTowards(enemy.position);
+
         // Move closer if too far
-        if (distance > 30) {
+        if (distance > 25) {
             this.moveTowards(enemy.position);
         } else {
             // Stop and shoot
             this.stopMovement();
-            this.faceTowards(enemy.position);
 
-            // Shoot with some accuracy
-            if (Math.random() < this.accuracy && this.inventory.hasWeapon(0)) {
-                this.attacking = true;
+            // Try to shoot with some accuracy
+            if (Math.random() < this.accuracy) {
+                // Check if we have weapon and can shoot
+                if (this.inventory.hasWeapon(0)) {
+                    const weapon = this.inventory.getWeapon(0);
+                    if (weapon && 'ammo' in weapon) {
+                        if (weapon.ammo > 0) {
+                            this.attacking = true;
+                        } else {
+                            // Try to reload
+                            this.tryReload();
+                        }
+                    } else {
+                        // Melee weapon, always can attack
+                        this.attacking = true;
+                    }
+                }
             }
         }
     }
@@ -361,6 +425,21 @@ export class Bot extends Player {
 
         // Face towards target
         this.faceTowards(target);
+    }
+
+    private moveTowardsAndInteract(target: Loot | Obstacle): void {
+        const distance = Geometry.distance(this.position, target.position);
+
+        if (distance < 5) {
+            // Close enough, interact
+            this.stopMovement();
+            if (target.isLoot) {
+                (target as Loot).interact(this);
+            }
+        } else {
+            // Move towards target
+            this.moveTowards(target.position);
+        }
     }
 
     private fleeFrom(target: Vector): void {
@@ -388,17 +467,88 @@ export class Bot extends Player {
     }
 
     private explore(): void {
-        // Simple random exploration
-        if (Math.random() < 0.1) { // 10% chance to change direction
-            const directions = [
-                () => { this.movement.right = true; },
-                () => { this.movement.left = true; },
-                () => { this.movement.down = true; },
-                () => { this.movement.up = true; },
-                () => { this.stopMovement(); }
-            ];
-            pickRandomInArray(directions)();
+        // Smart exploration with realistic movement patterns
+        if (Math.random() < 0.3) { // 30% chance to change direction (more realistic)
+            // Choose direction based on difficulty
+            const directionChange = Math.random();
+
+            if (directionChange < 0.1) {
+                // Stop moving occasionally
+                this.stopMovement();
+            } else {
+                // Move in random direction
+                const directions = [
+                    () => { this.movement.right = true; },
+                    () => { this.movement.left = true; },
+                    () => { this.movement.down = true; },
+                    () => { this.movement.up = true; }
+                ];
+
+                // Clear previous movement
+                this.stopMovement();
+
+                // Set new direction
+                const chosenDirection = pickRandomInArray(directions);
+                chosenDirection();
+
+                // Sometimes move diagonally
+                if (Math.random() < 0.3) {
+                    if (this.movement.right && Math.random() < 0.5) {
+                        this.movement.down = true;
+                    } else if (this.movement.left && Math.random() < 0.5) {
+                        this.movement.up = true;
+                    }
+                }
+            }
         }
+
+        // Face the direction we're moving
+        if (this.movement.right) {
+            this.rotation = 0;
+        } else if (this.movement.left) {
+            this.rotation = Math.PI;
+        } else if (this.movement.down) {
+            this.rotation = Math.PI / 2;
+        } else if (this.movement.up) {
+            this.rotation = -Math.PI / 2;
+        }
+    }
+
+    private tryReload(): void {
+        // For now, just stop attacking if no ammo
+        // In a full implementation, we'd need to check inventory for ammo
+        // and trigger reload action
+        this.attacking = false;
+    }
+
+    private findAmmo(): Loot | undefined {
+        let nearest: Loot | undefined;
+        let minDistance = Infinity;
+
+        for (const loot of this.game.grid.pool.getCategory(ObjectCategory.Loot)) {
+            if (loot.dead) continue;
+
+            // Check if it's ammo
+            if (loot.definition.idString.includes("ammo")) {
+                const distance = Geometry.distance(this.position, loot.position);
+                if (distance < minDistance && distance < 150) {
+                    minDistance = distance;
+                    nearest = loot;
+                }
+            }
+        }
+
+        return nearest;
+    }
+
+    private needsAmmo(): boolean {
+        if (this.inventory.hasWeapon(0)) {
+            const weapon = this.inventory.getWeapon(0);
+            if (weapon && 'ammo' in weapon) {
+                return weapon.ammo === 0;
+            }
+        }
+        return false;
     }
 
     // Override disconnect to handle bot cleanup

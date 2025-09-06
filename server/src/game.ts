@@ -264,9 +264,14 @@ export class Game implements GameData {
 
         // Spawn bots immediately after game creation
         this.addTimeout(() => {
-            if (Config.bots?.enabled && Config.bots.count > 0) {
+            if (Config.bots?.enabled && (Config.bots.count ?? 0) > 0) {
                 this.log(`Auto-spawning ${Config.bots.count} bots...`);
                 this.spawnBots();
+
+                // Check if we can start the game with bots
+                this.addTimeout(() => {
+                    this.checkGameStart();
+                }, 1000);
             }
         }, 500);
 
@@ -812,16 +817,7 @@ export class Game implements GameData {
             this.setGameData({ allowJoin: false });
         }, (this.spawnWindow * 1000) - 3000);
 
-        // Spawn bots if enabled
-        this.spawnBots();
-
-        // Also spawn bots immediately when game starts
-        this.addTimeout(() => {
-            if (Config.bots?.enabled && Config.bots.count > 0) {
-                this.log("Spawning bots at game start...");
-                this.spawnBots();
-            }
-        }, 1000);
+        // Bots are already spawned in constructor
             }, 3000);
         }
 
@@ -863,6 +859,27 @@ export class Game implements GameData {
         this.grid.removeObject(bot);
         this.deletedPlayers.push(bot.id);
         this.updateObjects = true;
+    }
+
+    private checkGameStart(): void {
+        if (
+            (this.isTeamMode ? this.teams.size : this.aliveCount) >= (Config.minTeamsToStart ?? 2)
+            && !this._started
+            && this.startTimeout === undefined
+        ) {
+            this.startTimeout = this.addTimeout(() => {
+                this._started = true;
+                this.setGameData({ startedTime: this.now });
+                this.gas.advanceGasStage();
+
+                this.addTimeout(() => {
+                    this.log("Preventing new players from joining");
+                    this.setGameData({ allowJoin: false });
+                }, (this.spawnWindow * 1000) - 3000);
+
+                this.log("Game started with bots!");
+            }, 3000);
+        }
     }
 
     private spawnBots(): void {
