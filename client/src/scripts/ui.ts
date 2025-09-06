@@ -1050,15 +1050,6 @@ export async function setUpUI(): Promise<void> {
 
     $<HTMLButtonElement>("#close-report").on("click", () => ui.reportingModal.fadeOut(250));
 
-    const partnersModal = $("#partners-modal");
-
-    $("#partners-link").on("click", () => {
-        if (partnersModal.is(":visible")) return;
-        $(".dialog").fadeOut(250);
-        partnersModal.fadeToggle(250);
-    });
-
-    $("#close-partners").on("click", () => partnersModal.fadeOut(250));
 
     const role = GameConsole.getBuiltInCVar("dv_role");
 
