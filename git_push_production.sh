@@ -35,7 +35,7 @@ fi
 if [ -z "$(git status --porcelain)" ]; then
     echo -e "${YELLOW}⚠️  Нет изменений для коммита${NC}"
     echo -e "${GREEN}✅ Репозиторий уже актуален${NC}"
-    echo -e "${BLUE}🌐 Railway URL: https://suroi.neonpsh.games${NC}"
+    echo -e "${BLUE}🌐 Production URL: https://suroi.neonpsh.games${NC}"
     exit 0
 fi
 
