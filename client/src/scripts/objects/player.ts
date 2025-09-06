@@ -432,11 +432,7 @@ export class Player extends GameObject.derive(ObjectCategory.Player) {
             SoundManager.position = this.position;
             MapManager.setPosition(this.position);
 
-            if (noMovementSmoothing) {
-                CameraManager.position = toPixiCoords(this.position);
-            } else {
-                CameraManager.setTargetPosition(toPixiCoords(this.position));
-            }
+            if (noMovementSmoothing) CameraManager.position = toPixiCoords(this.position);
 
             if (GameConsole.getBuiltInCVar("pf_show_pos")) {
                 UIManager.ui.debugPos.html(

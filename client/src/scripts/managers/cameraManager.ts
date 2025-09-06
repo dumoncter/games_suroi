@@ -35,33 +35,6 @@ class CameraManagerClass {
 
     position = Vec(0, 0);
 
-    // Интерполяция позиции камеры для плавности
-    private _targetPosition = Vec(0, 0);
-    private _interpolationSpeed = 0.12; // Уменьшенная скорость интерполяции для плавности
-
-    // Установка целевой позиции камеры с интерполяцией
-    setTargetPosition(target: Vector): void {
-        // Более плавная интерполяция для устранения дергания
-        const distance = Vec.len(Vec.sub(this._targetPosition, target));
-
-        // Если расстояние большое - используем быструю интерполяцию
-        // Если расстояние маленькое - используем медленную для плавности
-        if (distance > 50) {
-            this._interpolationSpeed = 0.25; // Быстрая интерполяция для больших перемещений
-        } else if (distance > 10) {
-            this._interpolationSpeed = 0.15; // Средняя интерполяция
-        } else {
-            this._interpolationSpeed = 0.08; // Медленная интерполяция для плавности
-        }
-
-        this._targetPosition = Vec.clone(target);
-
-        // Дополнительная оптимизация для мобильных устройств
-        if (InputManager.isMobile && GameConsole.getBuiltInCVar("cv_movement_smoothing")) {
-            this._interpolationSpeed *= 0.8; // Немного уменьшаем для мобильных
-        }
-    }
-
     private _zoom = DEFAULT_SCOPE.zoomLevel;
     get zoom(): number { return this._zoom; }
     set zoom(zoom: number) {
@@ -129,15 +102,6 @@ class CameraManagerClass {
     }
 
     update(): void {
-        // Интерполяция позиции камеры для плавности
-        const interpolationEnabled = GameConsole.getBuiltInCVar("cv_movement_smoothing");
-
-        if (interpolationEnabled) {
-            this.position = Vec.lerp(this.position, this._targetPosition, this._interpolationSpeed);
-        } else {
-            this.position = Vec.clone(this._targetPosition);
-        }
-
         let position = this.position;
 
         if (this.shaking) {

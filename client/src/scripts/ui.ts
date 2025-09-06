@@ -317,7 +317,9 @@ export async function finalizeUI(): Promise<void> {
     // TODO Use pixi for this
     if (darkShaders) {
         $("#game-canvas").css({
-            "filter": "brightness(0.65) saturate(0.85)"
+            "filter": "brightness(0.65) saturate(0.85)",
+            "position": "relative",
+            "z-index": "-1"
         });
     }
 }
@@ -494,16 +496,7 @@ export async function setUpUI(): Promise<void> {
             }
         }
 
-        let connectUrl = selectedRegion.gameAddress;
-
-        // Для продакшена подключаемся напрямую к /play
-        if (selectedRegion.name === "Suroi Game Portal") {
-            connectUrl = `${connectUrl}/play`;
-        } else {
-            connectUrl = `${connectUrl.replace("<gameID>", (response.gameID + selectedRegion.offset).toString())}/play`;
-        }
-
-        Game.connect(`${connectUrl}?${params.toString()}`);
+        Game.connect(`${selectedRegion.gameAddress.replace("<gameID>", (response.gameID + selectedRegion.offset).toString())}/play?${params.toString()}`);
         ui.splashMsg.hide();
 
         // Check again because there is a small chance that the create-team-menu element won't hide.

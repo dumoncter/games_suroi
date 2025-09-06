@@ -1,6 +1,6 @@
 <!--suppress HtmlUnknownTarget -->
 <!doctype html>
-<html lang="ru">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -258,7 +258,52 @@
             </div>
           </div>
 
-
+          <!-- Social buttons -->
+          <div id="splash-socials">
+            <div>
+              <a class="btn btn-darken btn-wiki" href="https://wiki.suroi.io" target="_blank">
+                <img src="img/socials/wiki.svg" width="32">
+                <span translation="wiki" style="color: white"></span>
+              </a>
+              <a class="btn btn-darken btn-kofi" href="https://ko-fi.com/suroi" target="_blank">
+                <img src="img/socials/kofi.svg" width="32">
+                <span translation="donate" style="color: white"></span>
+              </a>
+            </div>
+            <div>
+              <a
+                href="https://discord.suroi.io"
+                rel="noopener noreferrer"
+                class="btn btn-darken btn-social btn-discord"
+                target="_blank"
+              ></a>
+              <a href="https://reddit.com/r/suroigame" rel="noopener noreferrer" class="btn btn-darken btn-social btn-reddit" target="_blank"></a>
+              <a
+                href="https://bsky.app/profile/suroi.io"
+                rel="noopener noreferrer"
+                class="btn btn-darken btn-social btn-bsky"
+                target="_blank"
+              ></a>
+              <a
+                href="https://instagram.com/suroigame"
+                rel="noopener noreferrer"
+                class="btn btn-darken btn-social btn-instagram"
+                target="_blank"
+              ></a>
+              <a
+                href="https://www.youtube.com/@suroigame"
+                rel="noopener noreferrer"
+                class="btn btn-darken btn-social btn-youtube"
+                target="_blank"
+              ></a>
+              <a
+                href="https://github.com/HasangerGames/suroi"
+                rel="noopener noreferrer"
+                class="btn btn-darken btn-social btn-github"
+                target="_blank"
+              ></a>
+            </div>
+          </div>
         </div>
 
         <!-- Settings & skin options (right pane) -->
@@ -284,7 +329,45 @@
           </div>
         </div>
 
-
+        <!-- Featured Youtubr & Streamr -->
+        <div id="splash-featured-people">
+          <div class="featured-container">
+            <p class="featured-heading" translation="featured_youtubr"></p>
+            <a
+              class="featured-content"
+              id="youtube-featured-content"
+              href=""
+              target="_blank"
+            >
+              <img
+                id="featured-youtube-logo"
+                src="./img/misc/youtube-icon.svg"
+                alt="YouTube icon"
+                width="36"
+                height="25"
+              />
+              <span class="featured-name" id="youtube-featured-name"></span>
+            </a>
+          </div>
+          <div class="featured-container">
+            <p class="featured-heading" translation="featured_streamr"></p>
+            <a
+              class="featured-content"
+              id="twitch-featured-content"
+              target="_blank"
+              href=""
+            >
+              <img
+                id="featured-twitch-logo"
+                src="./img/misc/twitch-icon.svg"
+                alt="Twitch icon"
+                width="26.333"
+                height="30"
+              />
+              <span class="featured-name" id="twitch-featured-name"></span>
+            </a>
+          </div>
+        </div>
       </div>
 
       <!-- Language selector -->
@@ -300,7 +383,15 @@
       <div id="splash-version">
         <a href="./changelog/" target="_blank" rel="noopener noreferrer">v%VITE_APP_VERSION%</a>
       </div>
-
+      <div id="splash-partners">
+        <a id="partners-link" href="#" translation="partners"></a> |
+        <a id="privacy-policy-link" href="./privacy/" target="_blank" rel="noopener noreferrer" translation="privacy"></a> |
+        <a id="contact-link" href="mailto:support@suroi.io" target="_blank" rel="noopener noreferrer" translation="contact"></a>
+        <button class="btn btn-lg btn-darken btn-danger" id="btn-quit-suroi" style="margin-left: 8px; display: none">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          <span translation="quit">Quit</span>
+        </button>
+      </div>
     </div>
 
     <!-- Game UI -->

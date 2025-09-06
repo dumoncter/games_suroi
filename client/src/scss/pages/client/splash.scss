@@ -906,10 +906,9 @@
     }
 }
 
-#splash-version {
+#splash-version, #splash-partners {
     position: absolute;
     bottom: 0.5rem;
-    left: 0.75rem;
     z-index: 10000;
 
     font-size: 16px;
@@ -925,6 +924,14 @@
         padding: 4px 8px;
         border-radius: 8px;
     }
+}
+
+#splash-version {
+    left: 0.75rem;
+}
+
+#splash-partners {
+    right: 0.75rem;
 }
 
 .event-winter {
