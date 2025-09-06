@@ -7,13 +7,6 @@
     "spawn": { "mode": "default" },
     "maxPlayersPerGame": 80,
     "maxGames": 5,
-    "bots": {
-        "enabled": false,
-        "count": 0,
-        "difficulty": "medium",
-        "behavior": "strategic",
-        "names": ["Bot_Alpha", "Bot_Beta"]
-    },
     "roles": {
         "developr": { "password": "developr", "isDev": true },
         "dev_managr": { "password": "dev_managr" },

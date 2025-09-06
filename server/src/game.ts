@@ -51,7 +51,6 @@ import { IDAllocator } from "./utils/idAllocator";
 import { Cache, getAllLoots, getSpawnableLoots, ItemRegistry } from "./utils/lootHelpers";
 import { cleanUsername, modeFromMap } from "./utils/misc";
 import { MapIndicator } from "./objects/mapIndicator";
-import { Bot } from "./objects/bot";
 
 export class Game implements GameData {
     public readonly id: number;
@@ -72,7 +71,6 @@ export class Game implements GameData {
     readonly livingPlayers = new Set<Player>();
     readonly connectedPlayers = new Set<Player>();
     readonly spectatablePlayers: Player[] = [];
-    readonly bots = new Set<Bot>();
     /**
      * New players created this tick
      */
@@ -262,18 +260,8 @@ export class Game implements GameData {
         this.pluginManager.emit("game_created", this);
         this.log(`Created in ${Date.now() - this._start} ms`);
 
-        // Spawn bots immediately after game creation
-        this.addTimeout(() => {
-            if (Config.bots?.enabled && (Config.bots.count ?? 0) > 0) {
-                this.log(`Auto-spawning ${Config.bots.count} bots...`);
-                this.spawnBots();
-
-                // Check if we can start the game with bots
-                this.addTimeout(() => {
-                    this.checkGameStart();
-                }, 1000);
-            }
-        }, 500);
+        // Bots are now handled by separate AI client
+        // No longer spawning bots on server side
 
         // Start the tick loop
         this.tick();
@@ -456,10 +444,6 @@ export class Game implements GameData {
             player.update();
         }
 
-        // Update bots
-        for (const bot of this.bots) {
-            bot.update();
-        }
 
         // Serialize dirty objects
         for (const partialObject of this.partialDirtyObjects) {
@@ -842,24 +826,7 @@ export class Game implements GameData {
         this.pluginManager.emit("player_did_join", { player, joinPacket: packet });
     }
 
-    addBot(position: Vector, config: import("./objects/bot").BotConfig): Bot {
-        const bot = new Bot(this, position, config);
-        this.bots.add(bot);
-        return bot;
-    }
-
-    removeBot(bot: Bot): void {
-        this.bots.delete(bot);
-        if (this.livingPlayers.has(bot)) {
-            this.livingPlayers.delete(bot);
-        }
-        if (this.connectedPlayers.has(bot)) {
-            this.connectedPlayers.delete(bot);
-        }
-        this.grid.removeObject(bot);
-        this.deletedPlayers.push(bot.id);
-        this.updateObjects = true;
-    }
+    // Bot methods removed - bots now handled by separate AI client
 
     private checkGameStart(): void {
         if (
@@ -882,36 +849,7 @@ export class Game implements GameData {
         }
     }
 
-    private spawnBots(): void {
-        const botConfig = Config.bots;
-        if (!botConfig?.enabled || !botConfig.count) return;
-
-        this.log(`Spawning ${botConfig.count} bots...`);
-
-        for (let i = 0; i < botConfig.count; i++) {
-            const spawnPosition = this.map.getRandomPosition(
-                new CircleHitbox(5),
-                {
-                    maxAttempts: 500,
-                    spawnMode: MapObjectSpawnMode.GrassAndSand,
-                    collides: position => Geometry.distanceSquared(position, this.gas.newPosition) >= this.gas.newRadius ** 2
-                }
-            );
-
-            if (spawnPosition) {
-                const botName = botConfig.names?.[i] || `Bot_${i + 1}`;
-                const config = {
-                    difficulty: botConfig.difficulty || "medium",
-                    behavior: botConfig.behavior || "strategic",
-                    name: botName
-                };
-
-                this.addBot(spawnPosition, config as any);
-            }
-        }
-
-        this.log(`Successfully spawned ${this.bots.size} bots`);
-    }
+    // spawnBots method removed - bots now handled by separate AI client
 
     removePlayer(player: Player, reason?: string): void {
         if (player.disconnected) return;

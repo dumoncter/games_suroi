@@ -167,39 +167,7 @@
             "type": "number",
             "minimum": 1
         },
-        "bots": {
-            "description": "Bot configuration for automated players.",
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "description": "Whether bots are enabled.",
-                    "type": "boolean"
-                },
-                "count": {
-                    "description": "Number of bots to spawn.",
-                    "type": "number",
-                    "minimum": 0
-                },
-                "difficulty": {
-                    "description": "Difficulty level of bots.",
-                    "type": "string",
-                    "enum": ["easy", "medium", "hard", "expert"]
-                },
-                "behavior": {
-                    "description": "Behavior pattern of bots.",
-                    "type": "string",
-                    "enum": ["aggressive", "defensive", "strategic", "survival"]
-                },
-                "names": {
-                    "description": "List of bot names to use.",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            },
-            "additionalProperties": false
-        },
+        // Bots removed from server configuration - now handled by separate AI client
         "tps": {
             "description": "The number of game ticks that occur per second. Overrides the value of GameConstants.tps.",
             "type": "number",
