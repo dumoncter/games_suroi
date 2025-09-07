@@ -38,21 +38,20 @@ fi
 echo -e "${BLUE}🔄 Синхронизация с основным репозиторием...${NC}"
 BASE_DIR="/var/www/neonpsh.ru/games_portal/suroi"
 
-# Сохраняем специфические файлы сервера
+# Сначала копируем все необходимые файлы из основного репозитория
+echo "📋 Копируем все необходимые файлы из основного репозитория..."
+cp -r "$BASE_DIR/server"/* ./server/ 2>/dev/null || true
+cp "$BASE_DIR/package.json" ./package.json 2>/dev/null || true
+cp "$BASE_DIR/pnpm-lock.yaml" ./pnpm-lock.yaml 2>/dev/null || true
+cp "$BASE_DIR/pnpm-workspace.yaml" ./pnpm-workspace.yaml 2>/dev/null || true
+
+# Сохраняем специфические файлы сервера (после копирования)
 echo "💾 Сохраняем специфические файлы сервера..."
 cp railway.toml railway.toml.backup 2>/dev/null || true
 cp nginx.conf nginx.conf.backup 2>/dev/null || true
 cp Dockerfile Dockerfile.backup 2>/dev/null || true
 cp git_push_solo.sh git_push_solo.sh.backup 2>/dev/null || true
-
-# Копируем только необходимые файлы для solo сервера
-echo "📋 Копируем production-ready код для solo сервера..."
-cp -r "$BASE_DIR/server/dist" ./server/dist 2>/dev/null || true
-cp "$BASE_DIR/server/package.json" ./server/package.json 2>/dev/null || true
-cp "$BASE_DIR/server/config.solo.json" ./server/config.solo.json 2>/dev/null || true
-cp "$BASE_DIR/package.json" ./package.json 2>/dev/null || true
-cp "$BASE_DIR/pnpm-lock.yaml" ./pnpm-lock.yaml 2>/dev/null || true
-cp "$BASE_DIR/pnpm-workspace.yaml" ./pnpm-workspace.yaml 2>/dev/null || true
+cp start-server.js start-server.js.backup 2>/dev/null || true
 
 # Восстанавливаем специфические файлы
 echo "🔄 Восстанавливаем специфические файлы..."
@@ -60,6 +59,7 @@ mv railway.toml.backup railway.toml 2>/dev/null || true
 mv nginx.conf.backup nginx.conf 2>/dev/null || true
 mv Dockerfile.backup Dockerfile 2>/dev/null || true
 mv git_push_solo.sh.backup git_push_solo.sh 2>/dev/null || true
+mv start-server.js.backup start-server.js 2>/dev/null || true
 
 echo -e "${GREEN}✅ Синхронизация завершена${NC}"
 
