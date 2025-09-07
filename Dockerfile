@@ -64,19 +64,11 @@ COPY server/package.json ./
 # Install production dependencies only
 RUN pnpm install --frozen-lockfile --prod || pnpm install --no-frozen-lockfile --prod
 
-# Copy pre-compiled code from main repo
+# Copy pre-compiled code from main repo (includes common modules)
 COPY server/dist ./dist
-COPY common/dist ./common/dist
 
-# Copy server configs from main repo
-COPY server/config.production.json ./config.production.json
-COPY server/config.solo.json ./config.solo.json
-COPY server/config.team.json ./config.team.json
-# Set default config
-RUN cp ./config.production.json ./config.json
-
-# Copy production scripts from main repo
-COPY scripts/ ./scripts/
+# Copy only solo server config
+COPY server/config.solo.json ./config.json
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf

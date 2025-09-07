@@ -45,10 +45,11 @@ cp nginx.conf nginx.conf.backup 2>/dev/null || true
 cp Dockerfile Dockerfile.backup 2>/dev/null || true
 cp git_push_solo.sh git_push_solo.sh.backup 2>/dev/null || true
 
-# Копируем production-ready код из основного репозитория
-echo "📋 Копируем production-ready код из основного репозитория..."
-cp -r "$BASE_DIR/server"/* ./server/ 2>/dev/null || true
-cp -r "$BASE_DIR/common"/* ./common/ 2>/dev/null || true
+# Копируем только необходимые файлы для solo сервера
+echo "📋 Копируем production-ready код для solo сервера..."
+cp -r "$BASE_DIR/server/dist" ./server/dist 2>/dev/null || true
+cp "$BASE_DIR/server/package.json" ./server/package.json 2>/dev/null || true
+cp "$BASE_DIR/server/config.solo.json" ./server/config.solo.json 2>/dev/null || true
 cp "$BASE_DIR/package.json" ./package.json 2>/dev/null || true
 cp "$BASE_DIR/pnpm-lock.yaml" ./pnpm-lock.yaml 2>/dev/null || true
 cp "$BASE_DIR/pnpm-workspace.yaml" ./pnpm-workspace.yaml 2>/dev/null || true
