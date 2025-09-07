@@ -1,7 +1,7 @@
 {
     "$schema": "config.schema.json",
     "hostname": "0.0.0.0",
-    "port": 8082,
+    "port": 8080,
     "map": "normal",
     "teamMode": "solo",
     "spawn": { "mode": "default" },
