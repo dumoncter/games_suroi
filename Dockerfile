@@ -32,16 +32,7 @@ COPY server/package.json ./server/
 # Install dependencies
 RUN pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
 
-# Build stage
-FROM base AS build
-
-# Copy source code
-COPY . .
-
-# Build server only
-RUN cd server && pnpm build
-
-# Production stage
+# Production stage (no build needed - using pre-compiled code)
 FROM node:20-bookworm-slim AS production
 
 # Install system dependencies for skia-canvas and other native modules
@@ -66,25 +57,18 @@ RUN npm install -g pnpm
 # Create app directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files from main repo
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY server/package.json ./server/
+COPY server/package.json ./
 
 # Install production dependencies only
 RUN pnpm install --frozen-lockfile --prod || pnpm install --no-frozen-lockfile --prod
 
-# Copy built server
-COPY --from=build /app/server/dist ./server/dist
+# Copy pre-compiled code from main repo (includes common modules)
+COPY dist ./dist
 
-# Copy server configs
-COPY server/config.production.json ./server/config.production.json
-COPY server/config.solo.json ./server/config.solo.json
-COPY server/config.team.json ./server/config.team.json
-# Set default config
-RUN cp ./server/config.production.json ./server/config.json
-
-# Copy production scripts
-COPY scripts/ ./scripts/
+# Copy only team server config (already renamed to config.json in build process)
+COPY config.json ./config.json
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
@@ -106,9 +90,9 @@ USER 1001
 # Expose ports for both servers
 EXPOSE 8082 8083 3000
 
-# Health check - check solo server API (Railway provides PORT)
+# Health check - check team server API (Railway provides PORT)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:${PORT:-8082}/api/serverInfo || exit 1
+  CMD curl -f http://localhost:${PORT:-8083}/api/serverInfo || exit 1
 
 # Start the application
-CMD ["node", "scripts/start-production.js"]
+CMD ["node", "start-server.js"]

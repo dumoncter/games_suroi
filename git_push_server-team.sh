@@ -34,20 +34,33 @@ if [ "$CURRENT_BRANCH" != "server-team" ]; then
     }
 fi
 
-# Синхронизация с основным репозиторием
+# Синхронизация с основным репозиторием и локальная сборка
 echo -e "${BLUE}🔄 Синхронизация с основным репозиторием...${NC}"
 BASE_DIR="/var/www/neonpsh.ru/games_portal/suroi"
 
-# Сохраняем специфические файлы сервера
+# Шаг 1: Сборка основного сервера
+echo -e "${BLUE}📦 Сборка основного сервера...${NC}"
+cd "$BASE_DIR/server"
+if ! pnpm build; then
+    echo -e "${RED}❌ Ошибка сборки основного сервера${NC}"
+    exit 1
+fi
+cd "$BASE_DIR/server_team"
+
+# Шаг 2: Копируем только необходимые production-ready файлы
+echo "📋 Копируем production-ready код из основного сервера..."
+# Копируем скомпилированный код в корень (не в ./server/)
+cp -r "$BASE_DIR/server/dist" ./dist 2>/dev/null || true
+cp "$BASE_DIR/server/package.json" ./package.json 2>/dev/null || true
+cp "$BASE_DIR/server/config.team.json" ./config.json 2>/dev/null || true
+
+# Сохраняем специфические файлы сервера (после копирования)
 echo "💾 Сохраняем специфические файлы сервера..."
 cp railway.toml railway.toml.backup 2>/dev/null || true
 cp nginx.conf nginx.conf.backup 2>/dev/null || true
 cp Dockerfile Dockerfile.backup 2>/dev/null || true
 cp git_push_server-team.sh git_push_server-team.sh.backup 2>/dev/null || true
-
-# Копируем обновления серверного кода
-echo "📋 Копируем обновления серверного кода..."
-cp -r "$BASE_DIR/server"/* ./server/ 2>/dev/null || true
+cp start-server.js start-server.js.backup 2>/dev/null || true
 
 # Восстанавливаем специфические файлы
 echo "🔄 Восстанавливаем специфические файлы..."
@@ -55,8 +68,18 @@ mv railway.toml.backup railway.toml 2>/dev/null || true
 mv nginx.conf.backup nginx.conf 2>/dev/null || true
 mv Dockerfile.backup Dockerfile 2>/dev/null || true
 mv git_push_server-team.sh.backup git_push_server-team.sh 2>/dev/null || true
+mv start-server.js.backup start-server.js 2>/dev/null || true
 
 echo -e "${GREEN}✅ Синхронизация завершена${NC}"
+
+# Установка зависимостей (без локальной сборки - код уже собран)
+echo -e "${BLUE}📦 Устанавливаем зависимости...${NC}"
+if ! pnpm install; then
+    echo -e "${RED}❌ Ошибка установки зависимостей${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Зависимости установлены${NC}"
 
 # Проверяем, есть ли изменения для коммита
 if [ -z "$(git status --porcelain)" ]; then
@@ -112,12 +135,12 @@ echo -e "${GREEN}🎉 Деплой завершен успешно!${NC}"
 echo ""
 echo -e "${BLUE}🔄 Railway автоматически:${NC}"
 echo -e "${BLUE}   📦 Соберет Docker образ из server-team ветки${NC}"
-echo -e "${BLUE}   🏗️  Перекомпилирует TypeScript${NC}"
+echo -e "${BLUE}   🏗️  Использует уже скомпилированный TypeScript код${NC}"
 echo -e "${BLUE}   🌐 Запустит Team сервер на порту 8083${NC}"
 echo -e "${BLUE}   🔌 Настроит WebSocket прокси${NC}"
 echo -e "${BLUE}   ⚡ Применит оптимизации производительности${NC}"
 echo ""
-echo -e "${YELLOW}⏱️  Ожидайте 2-5 минут для завершения сборки${NC}"
+echo -e "${YELLOW}⏱️  Ожидайте 1-2 минут для завершения деплоя${NC}"
 echo ""
 echo -e "${GREEN}🌐 Team Server URL: https://suroi-team.neonpsh.games${NC}"
 echo ""
