@@ -4,6 +4,9 @@ FROM nginx:alpine
 # Install curl for health check
 RUN apk add --no-cache curl
 
+# Create log directory for nginx
+RUN mkdir -p /var/log/nginx
+
 # Copy nginx configuration first
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
