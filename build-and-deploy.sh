@@ -32,7 +32,7 @@ echo -e "${BLUE}📋 Копируем файлы в client_production...${NC}"
 cd "$MAIN_DIR/client_production"
 
 # Очищаем старые файлы (кроме системных)
-find . -not -path './.git*' -not -path './.git' -not -path './deploy.sh' -not -path './build-and-deploy.sh' -not -path './Dockerfile' -not -path './railway.toml' -not -path './nginx.conf' -not -path './.gitignore' -delete
+find . -not -path './.git*' -not -path './.git' -not -path './deploy.sh' -not -path './build-and-deploy.sh' -not -path './Dockerfile' -not -path './railway.toml' -not -path './nginx.conf' -not -path './.gitignore' -not -path './.dockerignore' -delete
 
 # Копируем новые собранные файлы
 cp -r "$MAIN_DIR/client/dist"/* ./

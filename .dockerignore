@@ -1,0 +1,23 @@
+# Build scripts and tools
+build-and-deploy.sh
+deploy.sh
+Dockerfile
+.dockerignore
+
+# Git files
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Railway config
+railway.toml
+
+# Development files
+proxy.txt
+
+# Temporary files
+*.tmp
+*.log

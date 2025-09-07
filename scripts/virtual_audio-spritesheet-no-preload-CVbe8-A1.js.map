@@ -1,0 +1,1 @@
+{"version":3,"file":"virtual_audio-spritesheet-no-preload-CVbe8-A1.js","sources":["../../virtual:audio-spritesheet-no-preload"],"sourcesContent":["export const noPreloadSounds=[\"bear_bunker_recording\",\"dual_s_g17_reload\",\"speaker\",\"tavern_music\",\"tavern_recording\"]"],"names":["noPreloadSounds"],"mappings":"AAAY,MAACA,EAAgB,CAAC,wBAAwB,oBAAoB,UAAU,eAAe,kBAAkB"}
