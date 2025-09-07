@@ -1,1 +1,114 @@
-FROM alpine:latest
+# Multi-stage Dockerfile for Suroi game
+FROM node:20-bookworm-slim AS base
+
+# Install system dependencies for skia-canvas and other native modules
+RUN apt-get update && apt-get install -y \
+    fontconfig \
+    libfreetype6 \
+    libpng-dev \
+    libjpeg-dev \
+
+
+
+
+
+    libicu-dev \
+    curl \
+    nginx \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Copy server package
+COPY server/package.json ./server/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
+
+# Build stage
+FROM base AS build
+
+# Copy source code
+COPY . .
+
+# Build server only
+RUN cd server && pnpm build
+
+# Production stage
+FROM node:20-bookworm-slim AS production
+
+# Install system dependencies for skia-canvas and other native modules
+RUN apt-get update && apt-get install -y \
+    fontconfig \
+    libfreetype6 \
+    libpng-dev \
+    libjpeg-dev \
+
+
+
+
+
+    libicu-dev \
+    curl \
+    nginx \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Create app directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY server/package.json ./server/
+
+# Install production dependencies only
+RUN pnpm install --frozen-lockfile --prod || pnpm install --no-frozen-lockfile --prod
+
+# Copy built server
+COPY --from=build /app/server/dist ./server/dist
+
+# Copy server configs
+COPY server/config.production.json ./server/config.production.json
+COPY server/config.solo.json ./server/config.solo.json
+COPY server/config.team.json ./server/config.team.json
+# Set default config
+RUN cp ./server/config.production.json ./server/config.json
+
+# Copy production scripts
+COPY scripts/ ./scripts/
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Create non-root user
+RUN groupadd -g 1001 nodejs
+RUN useradd -u 1001 -g nodejs -s /bin/bash -m nodejs
+
+# Change ownership and nginx permissions
+RUN mkdir -p /var/cache/nginx /var/log/nginx /run /var/lib/nginx/body /var/lib/nginx/proxy /var/lib/nginx/fastcgi /var/lib/nginx/uwsgi /var/lib/nginx/scgi && \
+    chown -R nodejs:nodejs /app && \
+    chown -R nodejs:nodejs /var/log/nginx && \
+    chown -R nodejs:nodejs /var/cache/nginx && \
+    chown -R nodejs:nodejs /var/lib/nginx && \
+    touch /run/nginx.pid && \
+    chown nodejs:nodejs /run/nginx.pid
+USER 1001
+
+# Expose ports for both servers
+EXPOSE 8082 8083 3000
+
+# Health check - check solo server API (Railway provides PORT)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:${PORT:-8082}/api/serverInfo || exit 1
+
+# Start the application
+CMD ["node", "scripts/start-production.js"]
