@@ -13,7 +13,6 @@ COPY manifest.json /usr/share/nginx/html/
 COPY robots.txt /usr/share/nginx/html/
 COPY favicon.ico /usr/share/nginx/html/
 COPY apple-app-site-association.json /usr/share/nginx/html/
-COPY proxy.txt /usr/share/nginx/html/
 COPY img/ /usr/share/nginx/html/img/
 COPY audio/ /usr/share/nginx/html/audio/
 COPY fonts/ /usr/share/nginx/html/fonts/
