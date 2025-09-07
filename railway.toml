@@ -3,7 +3,7 @@ builder = "dockerfile"
 
 [deploy]
 startCommand = "nginx -g 'daemon off;'"
-healthcheckPath = "/healthcheck"
+healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
