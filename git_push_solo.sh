@@ -34,7 +34,7 @@ if [ "$CURRENT_BRANCH" != "server-solo" ]; then
     }
 fi
 
-# Синхронизация с основным репозиторием
+# Синхронизация с основным репозиторием и локальная сборка
 echo -e "${BLUE}🔄 Синхронизация с основным репозиторием...${NC}"
 BASE_DIR="/var/www/neonpsh.ru/games_portal/suroi"
 
@@ -45,9 +45,13 @@ cp nginx.conf nginx.conf.backup 2>/dev/null || true
 cp Dockerfile Dockerfile.backup 2>/dev/null || true
 cp git_push_solo.sh git_push_solo.sh.backup 2>/dev/null || true
 
-# Копируем обновления серверного кода
-echo "📋 Копируем обновления серверного кода..."
+# Копируем production-ready код из основного репозитория
+echo "📋 Копируем production-ready код из основного репозитория..."
 cp -r "$BASE_DIR/server"/* ./server/ 2>/dev/null || true
+cp -r "$BASE_DIR/common"/* ./common/ 2>/dev/null || true
+cp "$BASE_DIR/package.json" ./package.json 2>/dev/null || true
+cp "$BASE_DIR/pnpm-lock.yaml" ./pnpm-lock.yaml 2>/dev/null || true
+cp "$BASE_DIR/pnpm-workspace.yaml" ./pnpm-workspace.yaml 2>/dev/null || true
 
 # Восстанавливаем специфические файлы
 echo "🔄 Восстанавливаем специфические файлы..."
@@ -57,6 +61,15 @@ mv Dockerfile.backup Dockerfile 2>/dev/null || true
 mv git_push_solo.sh.backup git_push_solo.sh 2>/dev/null || true
 
 echo -e "${GREEN}✅ Синхронизация завершена${NC}"
+
+# Установка зависимостей (без локальной сборки - код уже собран)
+echo -e "${BLUE}📦 Устанавливаем зависимости...${NC}"
+if ! pnpm install; then
+    echo -e "${RED}❌ Ошибка установки зависимостей${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Зависимости установлены${NC}"
 
 # Проверяем, есть ли изменения для коммита
 if [ -z "$(git status --porcelain)" ]; then
@@ -112,12 +125,12 @@ echo -e "${GREEN}🎉 Деплой завершен успешно!${NC}"
 echo ""
 echo -e "${BLUE}🔄 Railway автоматически:${NC}"
 echo -e "${BLUE}   📦 Соберет Docker образ из server-solo ветки${NC}"
-echo -e "${BLUE}   🏗️  Перекомпилирует TypeScript${NC}"
+echo -e "${BLUE}   🏗️  Использует уже скомпилированный TypeScript код${NC}"
 echo -e "${BLUE}   🌐 Запустит Solo сервер на порту 8082${NC}"
 echo -e "${BLUE}   🔌 Настроит WebSocket прокси${NC}"
 echo -e "${BLUE}   ⚡ Применит оптимизации производительности${NC}"
 echo ""
-echo -e "${YELLOW}⏱️  Ожидайте 2-5 минут для завершения сборки${NC}"
+echo -e "${YELLOW}⏱️  Ожидайте 1-2 минут для завершения деплоя${NC}"
 echo ""
 echo -e "${GREEN}🌐 Solo Server URL: https://suroi-solo.neonpsh.games${NC}"
 echo ""

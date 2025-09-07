@@ -32,16 +32,7 @@ COPY server/package.json ./server/
 # Install dependencies
 RUN pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
 
-# Build stage
-FROM base AS build
-
-# Copy source code
-COPY . .
-
-# Build server only
-RUN cd server && pnpm build
-
-# Production stage
+# Production stage (no build needed - using pre-compiled code)
 FROM node:20-bookworm-slim AS production
 
 # Install system dependencies for skia-canvas and other native modules
@@ -66,24 +57,25 @@ RUN npm install -g pnpm
 # Create app directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files from main repo
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY server/package.json ./server/
+COPY server/package.json ./
 
 # Install production dependencies only
 RUN pnpm install --frozen-lockfile --prod || pnpm install --no-frozen-lockfile --prod
 
-# Copy built server
-COPY --from=build /app/server/dist ./server/dist
+# Copy pre-compiled code from main repo
+COPY server/dist ./dist
+COPY common/dist ./common/dist
 
-# Copy server configs
-COPY server/config.production.json ./server/config.production.json
-COPY server/config.solo.json ./server/config.solo.json
-COPY server/config.team.json ./server/config.team.json
+# Copy server configs from main repo
+COPY server/config.production.json ./config.production.json
+COPY server/config.solo.json ./config.solo.json
+COPY server/config.team.json ./config.team.json
 # Set default config
-RUN cp ./server/config.production.json ./server/config.json
+RUN cp ./config.production.json ./config.json
 
-# Copy production scripts
+# Copy production scripts from main repo
 COPY scripts/ ./scripts/
 
 # Copy nginx configuration
@@ -111,4 +103,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:${PORT:-8082}/api/serverInfo || exit 1
 
 # Start the application
-CMD ["node", "scripts/start-production.js"]
+CMD ["node", "start-server.js"]
