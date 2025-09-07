@@ -27,8 +27,7 @@ COPY news/ /usr/share/nginx/html/news/
 COPY privacy/ /usr/share/nginx/html/privacy/
 COPY rules/ /usr/share/nginx/html/rules/
 
-# Expose port 8080 for client
-EXPOSE 8080
+EXPOSE 3000
 
 # Health check disabled
 # HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
