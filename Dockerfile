@@ -70,6 +70,9 @@ COPY dist ./dist
 # Copy only solo server config (already renamed to config.json in build process)
 COPY config.json ./config.json
 
+# Copy start script
+COPY start-server.js ./start-server.js
+
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
