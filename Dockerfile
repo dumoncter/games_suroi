@@ -18,6 +18,7 @@ COPY favicon.ico /usr/share/nginx/html/
 COPY apple-app-site-association.json /usr/share/nginx/html/
 COPY proxy.txt /usr/share/nginx/html/
 COPY status.txt /usr/share/nginx/html/
+COPY websocket_test.html /usr/share/nginx/html/
 # COPY test.txt /usr/share/nginx/html/
 COPY img/ /usr/share/nginx/html/img/
 COPY audio/ /usr/share/nginx/html/audio/
