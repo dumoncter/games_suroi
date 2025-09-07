@@ -10,7 +10,7 @@ const serverProcess = spawn('node', ['dist/server/src/server.js'], {
     stdio: 'inherit',
     env: {
         ...process.env,
-        CONFIG_FILE: 'config.solo.json',
+        CONFIG_FILE: 'config.json',
         NODE_ENV: 'production'
     }
 });

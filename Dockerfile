@@ -65,10 +65,10 @@ COPY server/package.json ./
 RUN pnpm install --frozen-lockfile --prod || pnpm install --no-frozen-lockfile --prod
 
 # Copy pre-compiled code from main repo (includes common modules)
-COPY server/dist ./dist
+COPY dist ./dist
 
-# Copy only solo server config
-COPY server/config.solo.json ./config.json
+# Copy only solo server config (already renamed to config.json in build process)
+COPY config.json ./config.json
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf

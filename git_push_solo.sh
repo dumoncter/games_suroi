@@ -38,12 +38,21 @@ fi
 echo -e "${BLUE}🔄 Синхронизация с основным репозиторием...${NC}"
 BASE_DIR="/var/www/neonpsh.ru/games_portal/suroi"
 
-# Сначала копируем все необходимые файлы из основного репозитория
-echo "📋 Копируем все необходимые файлы из основного репозитория..."
-cp -r "$BASE_DIR/server"/* ./server/ 2>/dev/null || true
-cp "$BASE_DIR/package.json" ./package.json 2>/dev/null || true
-cp "$BASE_DIR/pnpm-lock.yaml" ./pnpm-lock.yaml 2>/dev/null || true
-cp "$BASE_DIR/pnpm-workspace.yaml" ./pnpm-workspace.yaml 2>/dev/null || true
+# Шаг 1: Сборка основного сервера
+echo -e "${BLUE}📦 Сборка основного сервера...${NC}"
+cd "$BASE_DIR/server"
+if ! pnpm build; then
+    echo -e "${RED}❌ Ошибка сборки основного сервера${NC}"
+    exit 1
+fi
+cd "$BASE_DIR/server_solo"
+
+# Шаг 2: Копируем только необходимые production-ready файлы
+echo "📋 Копируем production-ready код из основного сервера..."
+# Копируем скомпилированный код в корень (не в ./server/)
+cp -r "$BASE_DIR/server/dist" ./dist 2>/dev/null || true
+cp "$BASE_DIR/server/package.json" ./package.json 2>/dev/null || true
+cp "$BASE_DIR/server/config.solo.json" ./config.json 2>/dev/null || true
 
 # Сохраняем специфические файлы сервера (после копирования)
 echo "💾 Сохраняем специфические файлы сервера..."
