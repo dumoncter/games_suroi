@@ -38,18 +38,18 @@ fi
 echo -e "${BLUE}🔄 Синхронизация с основным репозиторием...${NC}"
 BASE_DIR="/var/www/neonpsh.ru/games_portal/suroi"
 
-# Шаг 1: Сборка основного сервера
-echo -e "${BLUE}📦 Сборка основного сервера...${NC}"
-cd "$BASE_DIR/server"
-if ! pnpm build; then
-    echo -e "${RED}❌ Ошибка сборки основного сервера${NC}"
+# Шаг 1: Сборка только серверной части
+echo -e "${BLUE}📦 Сборка серверной части...${NC}"
+cd "$BASE_DIR"
+if ! pnpm run build:server; then
+    echo -e "${RED}❌ Ошибка сборки сервера${NC}"
     exit 1
 fi
 cd "$BASE_DIR/server_solo"
 
 # Шаг 2: Копируем только необходимые production-ready файлы
-echo "📋 Копируем production-ready код из основного сервера..."
-# Копируем скомпилированный код в корень (не в ./server/)
+echo "📋 Копируем production-ready код сервера..."
+# Копируем скомпилированный код в корень
 cp -r "$BASE_DIR/server/dist" ./dist 2>/dev/null || true
 cp "$BASE_DIR/server/package.json" ./package.json 2>/dev/null || true
 cp "$BASE_DIR/server/config.solo.json" ./config.json 2>/dev/null || true
