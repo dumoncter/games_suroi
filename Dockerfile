@@ -29,9 +29,9 @@ COPY rules/ /usr/share/nginx/html/rules/
 
 EXPOSE 3000
 
-# Health check disabled
-# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-#   CMD curl -f http://localhost/ || exit 1
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/status.txt || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
