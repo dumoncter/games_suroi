@@ -15,7 +15,7 @@ COPY favicon.ico /usr/share/nginx/html/
 COPY apple-app-site-association.json /usr/share/nginx/html/
 COPY proxy.txt /usr/share/nginx/html/
 COPY status.txt /usr/share/nginx/html/
-COPY test.txt /usr/share/nginx/html/
+# COPY test.txt /usr/share/nginx/html/
 COPY img/ /usr/share/nginx/html/img/
 COPY audio/ /usr/share/nginx/html/audio/
 COPY fonts/ /usr/share/nginx/html/fonts/
@@ -30,9 +30,9 @@ COPY rules/ /usr/share/nginx/html/rules/
 # Expose port 80 for client
 EXPOSE 80
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost/ || exit 1
+# Health check disabled
+# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+#   CMD curl -f http://localhost/ || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
