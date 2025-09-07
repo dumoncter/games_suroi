@@ -49,8 +49,10 @@ cd "$BASE_DIR/server_solo"
 
 # Шаг 2: Копируем только необходимые production-ready файлы
 echo "📋 Копируем production-ready код сервера..."
-# Копируем скомпилированный код в корень
-cp -r "$BASE_DIR/server/dist" ./dist 2>/dev/null || true
+# Очищаем старую папку dist если существует
+rm -rf ./dist
+# Копируем содержимое скомпилированного кода
+cp -r "$BASE_DIR/server/dist/." ./dist/ 2>/dev/null || true
 cp "$BASE_DIR/server/package.json" ./package.json 2>/dev/null || true
 cp "$BASE_DIR/server/config.solo.json" ./config.json 2>/dev/null || true
 
