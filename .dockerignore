@@ -16,7 +16,7 @@ README.md
 railway.toml
 
 # Development files
-proxy.txt
+# proxy.txt - needed for production (used in news page)
 
 # Temporary files
 *.tmp
