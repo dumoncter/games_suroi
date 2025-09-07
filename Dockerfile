@@ -25,12 +25,12 @@ COPY news/ /usr/share/nginx/html/news/
 COPY privacy/ /usr/share/nginx/html/privacy/
 COPY rules/ /usr/share/nginx/html/rules/
 
-# Expose port 80 for client
-EXPOSE 80
+# Expose port 8080 for client
+EXPOSE 8080
 
 # Health check with timestamp to force rebuild
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:80/healthcheck || exit 1
+  CMD curl -f http://localhost:8080/ready || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
