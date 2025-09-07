@@ -14,7 +14,6 @@ COPY robots.txt /usr/share/nginx/html/
 COPY favicon.ico /usr/share/nginx/html/
 COPY apple-app-site-association.json /usr/share/nginx/html/
 COPY proxy.txt /usr/share/nginx/html/
-COPY healthcheck.html /usr/share/nginx/html/
 COPY img/ /usr/share/nginx/html/img/
 COPY audio/ /usr/share/nginx/html/audio/
 COPY fonts/ /usr/share/nginx/html/fonts/
@@ -31,7 +30,7 @@ EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8080/healthcheck.html || exit 1
+  CMD curl -f http://localhost:8080/ || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
