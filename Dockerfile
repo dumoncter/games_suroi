@@ -38,6 +38,9 @@ FROM base AS build
 # Copy source code
 COPY . .
 
+# Ensure common modules are available for build
+COPY common/ ./common/
+
 # Build server only
 RUN cd server && pnpm build
 
