@@ -1,0 +1,11 @@
+# Игнорировать только временные файлы
+*.log
+*.tmp
+.DS_Store
+
+# Не игнорировать:
+# - dist/ (собранные файлы клиента)
+# - Dockerfile (для Railway)
+# - railway.toml (конфигурация Railway)
+# - nginx.conf (конфигурация nginx)
+# - deploy.sh (скрипт деплоя)
